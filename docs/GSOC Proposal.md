@@ -34,11 +34,13 @@ Can you modify your database schema to additionally store JSON with nested objec
 
 Could you write a query to return all movies with Lindsay Lohan in the cast?
 		
-Now. Can you program a machine to do this for you!!? Can you modify the database, on the fly, as you receive more documents like the above? How do your queries change?
+Now. Can you program a machine to do this for you!!? Can your program modify the database, on the fly, as you receive more documents like the above? **Most important:** How do your queries change?
 
 ## Problem 
 
 JSON is a nice format to store data, and it has become quite prevalent. Unfortunately, databases do not handle it well; often a human is required to declare a schema that can hold the JSON before it can be queried. If we are not overwhelmed by the diversity of JSON now, I expect we soon will be. I expect there to be more JSON, of more different shapes, as the number of connected devices (and the information they generate) continues to increase.   
+
+https://www.youtube.com/watch?v=4N_ktE4NFIk
 
 ## The solution
 
@@ -55,7 +57,7 @@ Each of these schema expansions should not change the meaning of old queries. Ha
 
 ## Schema-Independent Query Language?
 
-Under a changing schema, can we write queries that do not change meaning as the schema expands? For hierarchical data, data that fits in a [snowflake schemas](https://en.wikipedia.org/wiki/Snowflake_schemahierarchical): **Yes! Yes we can!!!**
+Under an expanding schema, can we write queries that do not change meaning? For hierarchical data, data that fits in a [snowflake schema](https://en.wikipedia.org/wiki/Snowflake_schemahierarchical): **Yes! Yes we can!!!**
 
 Each JSON document can be seen as a single point in a multidimensional Cartesian space; where the properties represent coordinates in that space. Inner objects simply add dimensions, and nested object arrays represent constellations of points in an even-higher dimensional space. These multidimensional [data cubes](https://en.wikipedia.org/wiki/OLAP_cube) can be represented by [fact tables](https://en.wikipedia.org/wiki/Fact_table) in a [data warehouse](https://en.wikipedia.org/wiki/Data_warehouse). Fact tables can be queried with [MDX](https://en.wikipedia.org/wiki/MultiDimensional_eXpressions). 
 
@@ -71,7 +73,7 @@ Having the machine manage the data schema gives us a new set of tools:
 * **Handle diverse datasources** - Relieving humans of schema management means we can ingest more diverse data faster. The familiar [ETL process](https://en.wikipedia.org/wiki/Extract,_load,_transform) can be replaced with [ELT](https://en.wikipedia.org/wiki/Extract,_transform,_load) Links: [A](http://hexanika.com/why-shift-from-etl-to-elt/), [B](https://www.ironsidegroup.com/2015/03/01/etl-vs-elt-whats-the-big-difference/)
 * **Mitigate the need for a (key, value) table** - Automatic schema management allows us to annotate records, or objects, without manual migrations: This prevents the creation of a (key, value) table (the "junk drawer" found in many database schemas) where those annotations usually reside.  
 * **Automatic ingestion of changing relational databases** - Despite the limited set of schema expansions, we can handle more general relational database migrations: Relational databases can [extracted as a series of De-normailzed fact cubes](https://github.com/klahnakoski/MySQL-to-S3) As a relational database undergoes migrations (adding columns, adding relations, splitting tables), the extraction process can continue to capture the changes because each fact table is merely a snowflake subset of the relational whole.
-* **leverage existing database optimization** - This project is about using MDX-inspired query semantics and translating to database-specific query language: We leverage the powerful features of the underlying datastore.  
+* **Leverage existing database optimization** - This project is about using MDX-inspired query semantics and translating to database-specific query language: We leverage the powerful features of the underlying datastore.  
 
 ## Existing solutions
 
@@ -109,9 +111,9 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 * **Numpy** - Use the columnar storage strategy, and use Numpy to store the columns. This could give us a very fast query response, albeit limited to memory.
 
 
-## The Future
+## The Future?
 
 * **Hetrogenous Shards** - Being able to send the same query to multiple backends allows us to pick a backend that best meets requirements; very big, or very fast
-* **Dimensions** - The next step in isolating queries from schema migrations involves declaring "dimensions": Dimensions are a level of indirection responsible for translating the complex reality of the data to a cleaner, and easy-to-query property. This can involve renaming, simple parsing, and adding business meaning to vectors.  
-* **Machine Managed indexes** - Databases indexes act much like a columnar datastore. If we account for the common queries received, we may be able to choose the right indexes to create to improve query response.    
+* **Dimensions** - The next step in isolating queries from schema migrations involves declaring "dimensions": [Dimensions](https://en.wikipedia.org/wiki/Dimension_(data_warehouse)) are a level of indirection responsible for translating the complex reality of the data to a cleaner, and easy-to-query property. This can involve renaming, simple parsing, and adding business meaning to vectors in the multidimensional fact table.  
+* **Machine Managed indexes** - Databases indexes act much like a columnar datastore. If we account for the common queries received, we may be able to choose the right indexes to improve query response. We might just beat Elasticsearch!
 * **Subqueries** - Allowing heterogeneous datastores also allows us to split queries across platforms so each backend can handle the part it is best at; By dispatching data aggregation and filtering to a cluster we get fast response over big data, while a local database can use previous query results to perform sophisticated cross referencing and window functions.
