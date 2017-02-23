@@ -6,7 +6,7 @@ This project is a test suite for [JSON Query Expressions](https://github.com/kla
 There are currently connectors for  
 
 * Elastisearch 1.7.x
-* Sqlite 2.x (incomplete)
+* [Sqlite 3.x](https://github.com/klahnakoski/jx-sqlite/tree/master) (incomplete)
 
 Hopefully, over time, more connectors will be made, and the suite improved. 
 

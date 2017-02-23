@@ -11,13 +11,13 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from pyDots import wrap
-from tests.base_test_class import ActiveDataBaseTest, TEST_TABLE
+from mo_dots import wrap
+from tests.test_jx import BaseTestCase, TEST_TABLE
 
 lots_of_data = wrap([{"a": i} for i in range(30)])
 
 
-class TestFilters(ActiveDataBaseTest):
+class TestFilters(BaseTestCase):
     def test_where_expression(self):
         test = {
             "data": [  # PROPERTIES STARTING WITH _ ARE NESTED AUTOMATICALLY
@@ -58,7 +58,6 @@ class TestFilters(ActiveDataBaseTest):
         }
         self.utils.execute_es_tests(test)
 
-
     def test_add_expression(self):
         test = {
             "data": [  # PROPERTIES STARTING WITH _ ARE NESTED AUTOMATICALLY
@@ -68,15 +67,16 @@ class TestFilters(ActiveDataBaseTest):
                        {"a": {"b": 1, "c": 1}},
             ],
             "query": {
-                "from": TEST_TABLE,
                 "select": "*",
+                "from": TEST_TABLE,
                 "where": {"eq": [{"add": ["a.b", 1]}, "a.c"]},
                 "sort": "a.b"
             },
             "expecting_list": {
                 "meta": {"format": "list"}, "data": [
-                {"a": {"b": 0, "c": 1}}
-            ]},
+                    {"a.b": 0, "a.c": 1}
+                ]
+            },
             "expecting_table": {
                 "meta": {"format": "table"},
                 "header": ["a.b", "a.c"],
@@ -91,8 +91,8 @@ class TestFilters(ActiveDataBaseTest):
                     }
                 ],
                 "data": {
-                    "a.b": [0],
-                    "a.c": [1]
+                    "a\.b": [0],
+                    "a\.c": [1]
                 }
             }
         }
@@ -128,7 +128,6 @@ class TestFilters(ActiveDataBaseTest):
             ]}
         }
         self.utils.execute_es_tests(test)
-
 
     def test_empty_or(self):
         test = {

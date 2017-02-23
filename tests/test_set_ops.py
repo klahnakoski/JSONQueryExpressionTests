@@ -13,16 +13,15 @@ from __future__ import unicode_literals
 
 from unittest import skipIf
 
-from pyDots import wrap
-from pyLibrary.maths import Math
+from mo_dots import wrap
+from mo_math import Math
 from pyLibrary.queries import query
-from tests import NULL
-from tests.base_test_class import ActiveDataBaseTest, TEST_TABLE, global_settings
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings, NULL
 
 lots_of_data = wrap([{"a": i} for i in range(30)])
 
 
-class TestSetOps(ActiveDataBaseTest):
+class TestSetOps(BaseTestCase):
 
     def test_star(self):
        test = {
@@ -629,6 +628,52 @@ class TestSetOps(ActiveDataBaseTest):
         test.query.format = "list"
         self.assertRaises(Exception, self.utils.execute_query, test.query)
 
+    def test_select_w_star(self):
+        test = {
+            "data": [
+                {"a": {"b": 0, "c": 0}},
+                {"a": {"b": 0, "c": 1}},
+                {"a": {"b": 1, "c": 0}},
+                {"a": {"b": 1, "c": 1}},
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": "*",
+                "sort": ["a.b", "a.c"]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"}, "data": [
+                    {"a.b": 0, "a.c": 0},
+                    {"a.b": 0, "a.c": 1},
+                    {"a.b": 1, "a.c": 0},
+                    {"a.b": 1, "a.c": 1}
+            ]},
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a.b", "a.c"],
+                "data": [
+                    [0, 0],
+                    [0, 1],
+                    [1, 0],
+                    [1, 1]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "rownum",
+                        "domain": {"type": "rownum", "min": 0, "max": 4, "interval": 1}
+                    }
+                ],
+                "data": {
+                    "a\.b": [0, 0, 1, 1],
+                    "a\.c": [0, 1, 0, 1]
+                }
+            }
+        }
+        self.utils.execute_es_tests(test)
+
     def test_select_expression(self):
         test = {
             "data": [
@@ -749,7 +794,7 @@ class TestSetOps(ActiveDataBaseTest):
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
-                    {"a": {"b": "x", "v": 2}},
+                    {"a": {"b": "x", "v": 2, "c": {"z": 0}}},
                     {"a": {"b": "x", "v": 5}},
                     {"a": {"b": "x", "v": 7}},
                     NULL
@@ -914,9 +959,9 @@ class TestSetOps(ActiveDataBaseTest):
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
-                    {"o": 3, "a": {"b": "x", "v": 2}},
-                    {"o": 1, "a": {"b": "x", "v": 5}},
-                    {"o": 2, "a": {"b": "x", "v": 7}},
+                    {"o": 3, "a.b": "x", "a.v": 2},
+                    {"o": 1, "a.b": "x", "a.v": 5},
+                    {"o": 2, "a.b": "x", "a.v": 7},
                     {"o": 4}
                 ]
             },

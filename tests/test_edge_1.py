@@ -13,11 +13,10 @@ from __future__ import unicode_literals
 
 from unittest import skipIf
 
-from tests import NULL
-from tests.base_test_class import ActiveDataBaseTest, TEST_TABLE, global_settings
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings, NULL
 
 
-class TestEdge1(ActiveDataBaseTest):
+class TestEdge1(BaseTestCase):
 
     def test_no_select(self):
         test = {
@@ -1342,7 +1341,7 @@ class TestEdge1(ActiveDataBaseTest):
         }
         self.utils.execute_es_tests(test)
 
-    def test_edge_using_list(self):
+    def test_edge_using_tuple(self):
         data = [
             {"r": "a", "s": "aa"},
             {          "s": "bb"},

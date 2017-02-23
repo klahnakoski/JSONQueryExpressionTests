@@ -11,11 +11,10 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from pyDots import wrap
-from pyLibrary.times.dates import Date
-from pyLibrary.times.durations import WEEK, DAY
-from tests import NULL
-from tests.base_test_class import ActiveDataBaseTest, TEST_TABLE
+from mo_dots import wrap
+from mo_times.dates import Date
+from mo_times.durations import WEEK, DAY
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings, NULL
 
 TODAY = Date.today()
 
@@ -45,22 +44,22 @@ expected_list_1 = wrap([
 ])
 
 expected2 = wrap([
-    {"a": "x", "t": (TODAY - WEEK).unix, "v": NULL},
+    {"a": "x", "t": (TODAY - WEEK).unix,    "v": NULL},
     {"a": "x", "t": (TODAY - 6 * DAY).unix, "v": NULL},
     {"a": "x", "t": (TODAY - 5 * DAY).unix, "v": 11},
     {"a": "x", "t": (TODAY - 4 * DAY).unix, "v": 7},
     {"a": "x", "t": (TODAY - 3 * DAY).unix, "v": 5},
     {"a": "x", "t": (TODAY - 2 * DAY).unix, "v": 3},
     {"a": "x", "t": (TODAY - 1 * DAY).unix, "v": 2},
-    {"a": "x", "v": 29},
-    {"a": "y", "t": (TODAY - WEEK).unix, "v": NULL},
+    {"a": "x",                              "v": 29},
+    {"a": "y", "t": (TODAY - WEEK).unix,    "v": NULL},
     {"a": "y", "t": (TODAY - 6 * DAY).unix, "v": NULL},
     {"a": "y", "t": (TODAY - 5 * DAY).unix, "v": 23},
     {"a": "y", "t": (TODAY - 4 * DAY).unix, "v": 19},
     {"a": "y", "t": (TODAY - 3 * DAY).unix, "v": NULL},
     {"a": "y", "t": (TODAY - 2 * DAY).unix, "v": 17},
     {"a": "y", "t": (TODAY - 1 * DAY).unix, "v": 13},
-    {"a": "y", "v": NULL}
+    {"a": "y",                              "v": NULL}
 ])
 
 test_data_3 = [
@@ -90,7 +89,7 @@ expected3 = wrap([
 ])
 
 
-class TestTime(ActiveDataBaseTest):
+class TestTime(BaseTestCase):
     def test_time_variables(self):
         test = {
             "metadata": {},

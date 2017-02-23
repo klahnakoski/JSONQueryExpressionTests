@@ -11,9 +11,10 @@
 from __future__ import division
 from __future__ import unicode_literals
 
+from mo_testing.fuzzytestcase import FuzzyTestCase
+
 from pyLibrary.queries.query import _normalize_edge, _normalize_select
-from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
-from tests import NULL
+from tests.test_jx import NULL
 
 
 class TestQueryNormalization(FuzzyTestCase):

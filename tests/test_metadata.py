@@ -11,11 +11,13 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from pyDots import set_default, wrap
-from tests.base_test_class import ActiveDataBaseTest
+from mo_dots import set_default, wrap
+
+from pyLibrary.meta import extenstion_method
+from tests.test_jx import BaseTestCase
 
 
-class TestMetadata(ActiveDataBaseTest):
+class TestMetadata(BaseTestCase):
 
 
     def test_meta(self):
@@ -146,3 +148,16 @@ class TestMetadata(ActiveDataBaseTest):
         }
 
         self.utils.send_queries(test)
+
+    def test_assign(self):
+        class TestClass(object):
+            pass
+
+        a = TestClass()
+
+        @extenstion_method(TestClass)
+        def my_func(self, print_me):
+            print(print_me)
+            return print_me
+
+        self.assertEqual(a.my_func("testing"), "testing", "Expecting method to be run")

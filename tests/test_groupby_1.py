@@ -11,12 +11,12 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from pyDots import wrap, set_default
-from tests import NULL
-from tests.base_test_class import ActiveDataBaseTest, TEST_TABLE
+from mo_dots import wrap, set_default
+
+from tests.test_jx import BaseTestCase, TEST_TABLE, NULL
 
 
-class TestgroupBy1(ActiveDataBaseTest):
+class TestgroupBy1(BaseTestCase):
 
     def test_no_select(self):
         test = {

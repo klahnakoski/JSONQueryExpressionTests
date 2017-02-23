@@ -11,16 +11,14 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from unittest import skipIf
+from mo_dots import wrap
 
-from pyDots import wrap
-from tests import NULL
-from tests.base_test_class import ActiveDataBaseTest, TEST_TABLE, global_settings
+from tests.test_jx import BaseTestCase, TEST_TABLE, NULL
 
 lots_of_data = wrap([{"a": i} for i in range(30)])
 
 
-class TestSetOps(ActiveDataBaseTest):
+class TestSetOps(BaseTestCase):
 
     def test_length(self):
         test = {
@@ -350,13 +348,13 @@ class TestSetOps(ActiveDataBaseTest):
             ],
             "query": {
                 "from": TEST_TABLE,
-                "select": ["a", "b", {"name": "t", "value": {"add": ["a", "b"], "default": 0}}]
+                "select": ["a", "b", {"name": "t", "value": {"add": ["a", "b"], "default": -5}}]
             },
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
                     {"a": 1, "b": -1, "t": 0},
-                    {"t": 0}
+                    {"t": -5}
                 ]
             }
         }
@@ -600,6 +598,7 @@ class TestSetOps(ActiveDataBaseTest):
                 {"v": "2"},
                 {"v": 3},
                 {"v": "4"},
+                {"v": "100"},
                 {}
             ],
             "query": {
@@ -608,7 +607,7 @@ class TestSetOps(ActiveDataBaseTest):
             },
             "expecting_list": {
                 "meta": {"format": "list"},
-                "data": ["1", "2", "3", "4", NULL]
+                "data": ["1", "2", "3", "4", "100", NULL]
             }
         }
         self.utils.execute_es_tests(test)
@@ -697,7 +696,7 @@ class TestSetOps(ActiveDataBaseTest):
         }
         self.utils.execute_es_tests(test)
 
-    def test_not_left(self):
+    def test_param_left(self):
         test = {
             "data": [
                 {"url": NULL},
@@ -719,14 +718,12 @@ class TestSetOps(ActiveDataBaseTest):
                     "value": {
                         "left": [
                             "url",
-                            {"add": [
-                                1,
-                                {
-                                    "find": {"url": "/"},
-                                    "start": 23,
-                                    "default": {"length": "url"}
-                                }
-                            ]}
+                            {
+                                "find": {"url": "/"},
+                                "start": 23,
+                                "default": {"length": "url"}
+                            }
+
                         ]
                     }
                 }
