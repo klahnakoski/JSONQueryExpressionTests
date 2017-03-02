@@ -63,6 +63,8 @@ Each JSON document can be seen as a single point in a multidimensional Cartesian
 
 With this in mind, we should be able to use MDX as inspiration to query JSON datastores. Seeing data as occupying a Cartesian space gives us hints about the semantics of queries, and how they might be invariant over the particular schema expansions listed above.
 
+[Documentation on JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md)
+
 ## Benefits
 
 Having the machine manage the data schema gives us a new set of tools: 
@@ -105,7 +107,7 @@ For this project, a connector for Sqlite is preferred: It provides us with a fas
 
 Even though Sqlite is preferred, the choice of datastore is not very important to this project. Additional usefulness comes from being able to use the same query language on a diverse set of datastores; each has strengths and weaknesses, swapping one for another gives us flexibility. 
 
-* **ElasticSearch 5.x+** - A connector for ElasticSearch 1.7.* already exists, but later versions of ElasticSearch have stricter schema requirements. Update the query library to use ElasticSearch 5.x. Learning the intricacies of the ES query langauge will be the hard part here.
+
 * **MySQL** - Use MySQL instead of SQLite - this may be slightly easier, but depends on a MySQL service to be useful.  
 * **Columnar DB** - Still use a database, but use columnar strategies: Give each JSON property its own table with foreign keys pointing to the document id. Adding new columns will be fast because they are whole new tables.  Queries may be faster because rows are smaller, or queries may be slower because of join costs. Any work on this variation would be experimental. 
 * **Numpy** - Use the columnar storage strategy, and use Numpy to store the columns. This could give us a very fast query response, albeit limited to memory.
