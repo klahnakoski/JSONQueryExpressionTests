@@ -63,7 +63,7 @@ Each JSON document can be seen as a single point in a multidimensional Cartesian
 
 With this in mind, we should be able to use MDX as inspiration to query JSON datastores. Seeing data as occupying a Cartesian space gives us hints about the semantics of queries, and how they might be invariant over the particular schema expansions listed above.
 
-[Documentation on JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md)
+Some user documentation may help with understanding the query language, and what the tests are testing: [JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md)
 
 ## Benefits
 
@@ -119,3 +119,26 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 * **Dimensions** - The next step in isolating queries from schema migrations involves declaring "dimensions": [Dimensions](https://en.wikipedia.org/wiki/Dimension_(data_warehouse)) are a level of indirection responsible for translating the complex reality of the data to a cleaner, and easy-to-query property. This can involve renaming, simple parsing, and adding business meaning to vectors in the multidimensional fact table.  
 * **Machine Managed indexes** - Databases indexes act much like a columnar datastore. If we account for the common queries received, we may be able to choose the right indexes to improve query response. We might just beat Elasticsearch!
 * **Subqueries** - Allowing heterogeneous datastores also allows us to split queries across platforms so each backend can handle the part it is best at; By dispatching data aggregation and filtering to a cluster we get fast response over big data, while a local database can use previous query results to perform sophisticated cross referencing and window functions.
+
+##Questions and Answers
+
+**Why Python 2.7?  Are you a dinosaur?**
+
+> Python 2.7 is used because when this project started a few years ago, newer versions of Python did not have reasonable binary library support for Windows. When enough package providers provide Python3+ support for Windows, then we can migrate. Feel free to modify the code to better match Python3 style where possible: For example: `except Exception, e` was a result of me simply not knowing about the `except Exception as e` format. Maybe we can advance the code to version 3, but that would be too much for this project I think
+
+**Where will this code be used?**
+
+> 1a) It will enhance ActiveData: When ActiveData pulls data from the cluster, it would be nice to handle sub queries on that data before it gets sent back to the requester. Python is too slow to manipulate data, so we either require a temporary database or Numpy or Pandas. The hope is this project can handle the JSON coming from Elasticsearch queries and perform the required post-processing queries on that data.
+
+> 1b) It will enhance ActiveData: ActiveData tracks the Elasticsearch cluster metadata to help translate queries. This is too much data to handle quickly with pure Python. The hope is this project will serve as a fast metadata database.   
+
+> 2) SpotManager:  The SpotManager is responsible for bidding for spot instances on AWS. It deals with a reasonable amount of data, but is slow because the queries are implemented in Python. Sqlite can go much faster for the given data volume.
+
+> 3) esShardBalancer - Another pure-python program than can be made to go faster if queries were implemented in Sqlite.
+
+> In general, code can make better decisions if it has lots of data. Python is too slow for this task, so we need a module that can handle data for us; something that accepts queries that will return short results to make decisions on. This data can come from any number of systems, in large quantities, and of changing schema over time. **We do not want to be manually declaring schemas for relations and properties not used by the code.** At the same time, we want to keep all the data in case we want to make decisions on it later, either as feature enhancement or for manual debugging.
+
+**Can we add indexes and materialized views?**
+
+>For this project query speed is not the highest priority: I am concerned about achieving feature parity with the existing Elasticsearch connector (aka passing all the tests), and I believe it may be more difficult than it looks: I am sure the test suite will grow as you find corner cases that appear while implementing a Sqlite connector. You can add indexes, or materialized views to make things faster, but I suggest you work on that after your solution can pass all the tests.
+
