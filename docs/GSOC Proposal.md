@@ -63,7 +63,7 @@ Each JSON document can be seen as a single point in a multidimensional Cartesian
 
 With this in mind, we should be able to use MDX as inspiration to query JSON datastores. Seeing data as occupying a Cartesian space gives us hints about the semantics of queries, and how they might be invariant over the particular schema expansions listed above.
 
-Some user documentation may help with understanding the query language, and what the tests are testing: [JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md)
+**Some user documentation may help with understanding the query language**: [JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md)
 
 ## Benefits
 
@@ -122,7 +122,20 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 
 ##Questions and Answers
 
-**Why Python 2.7?  Are you a dinosaur?**
+**Where do I start?**
+
+> Be sure to read this document, and read the links. Especially [JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md), which will give you a high level idea of what you will be building.
+> 
+> I attempted a solution ([jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master)) but it is far from a complete. The tests that do pass are the easy tests the hard tests remain; It might require a refactoring of the code. I only suggest extending this code if you are unusually good at understanding other people's code.
+
+> Building your own solution from scratch is a reasonable path to take.  This will allow you to understand the problem without understanding how my incomplete solution tried to solve the problem. You can fork the [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) code, remove all the implementation and start writing code that will pass tests. 
+
+**Why does `jx-sqlite` use pyLibrary?**
+
+> The [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) implementation has an unfortunate interdependence with pyLibrary; It would be nice to decouple these two.
+
+
+**Why Python 2.7? Are you a dinosaur?**
 
 > Python 2.7 is used because when this project started a few years ago, newer versions of Python did not have reasonable binary library support for Windows. When enough package providers provide Python3+ support for Windows, then we can migrate. Feel free to modify the code to better match Python3 style where possible: For example: `except Exception, e` was a result of me simply not knowing about the `except Exception as e` format. Maybe we can advance the code to version 3, but that would be too much for this project I think
 
