@@ -128,7 +128,13 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 > 
 > I attempted a solution ([jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master)) but it is far from a complete. The tests that do pass are the easy tests the hard tests remain; It might require a refactoring of the code. I only suggest extending this code if you are unusually good at understanding other people's code.
 
-> Building your own solution from scratch is a reasonable path to take.  This will allow you to understand the problem without understanding how my incomplete solution tried to solve the problem. You can fork the [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) code, remove all the implementation and start writing code that will pass tests. 
+> Building your own solution from scratch is a reasonable path to take.  This will allow you to understand the problem without understanding how my incomplete solution tried to solve the problem. It may be less work overall. You can fork the [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) code, remove all the implementation and start writing code that will pass tests. 
+
+
+**What is to be done next in `jx-sqlite`?**
+
+> If you are comfortable with extending [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master), then it is obvious to ask where is the hole to be filled:
+> The majority of the problem is performing the deep queries: When JSON documents are added, the library is responsible for creating tables to hold the contents of any arrays - this is broken because the schema management is not clear and there are bugs. The current code is too complicated to understand in a single sitting; so I started a refactor to that will provide an API to a snowflake schema; it will map a hierarchical (snowflake) schema to a sqlite relational database. Hopefully, the JSON <-> Snowflake <-> sqlite transform will prove easier to understand and we can pass some of the more complicated tests.
 
 **Why does `jx-sqlite` use pyLibrary?**
 
