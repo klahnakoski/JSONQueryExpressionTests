@@ -46,7 +46,7 @@ https://www.youtube.com/watch?v=4N_ktE4NFIk
 
 The easy part is making the schema, and changing it dynamically as new JSON schema are encountered. The harder problem is ensuring the old queries against the new schema have the same meaning. In general this is impossible, but there are particular schema migrations that can leave the meaning of existing queries unchanged.  
 
-By dealing with JSON documents we are limiting ourselves to [snowflake schemas](https://en.wikipedia.org/wiki/Snowflake_schemahierarchical). This limitation reduces the scope of the problem. Let's further restrict ourselves to a subset of schema transformations that can be handled automatically; we will call them "schema expansions":
+By dealing with JSON documents we are limiting ourselves to [snowflake schemas](https://en.wikipedia.org/wiki/Snowflake_schema). This limitation reduces the scope of the problem. Let's further restrict ourselves to a subset of schema transformations that can be handled automatically; we will call them "schema expansions":
 
 1.	Adding a property - This is a common migration
 2.	Changing the datatype of a property, or allowing multiple types - It is nice if numbers can be queried like numbers and strings as strings even if they are found in the same property..
