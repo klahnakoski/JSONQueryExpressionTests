@@ -143,20 +143,20 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 
 **May you give me a test that is easy to solve?**
 
-Here is a test that is relatively easy to solve: [`test_select3_object(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_set_ops.py#L942) It is returning the wrong number of columns when returning `"format":"table"`.
+> Here is a test that is relatively easy to solve: [`test_select3_object(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_set_ops.py#L942) It is returning the wrong number of columns when returning `"format":"table"`.
 
-This test is about interpreting the meaning of `{"select": ["o", "a.*"]}` in the context of formatting as a table.  As per [the user documentation on `select`](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx_clause_select.md#selecting-leaves-), we expect the star (`*`) to expand all leaves into individual columns, which did not happen in this test.
+> This test is about interpreting the meaning of `{"select": ["o", "a.*"]}` in the context of formatting as a table.  As per [the user documentation on `select`](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx_clause_select.md#selecting-leaves-), we expect the star (`*`) to expand all leaves into individual columns, which did not happen in this test.
 
-Put a breakpoint in the code at [setop_table.py, line 323](https://github.com/klahnakoski/jx-sqlite/blob/04752922974a84f225dd9b058c4c939989b613e9/jx_sqlite/setop_table.py#L323) (Notice the test is named "set_ops" and the code is named similarly as "setop") This is the point just before the data is formatted into table form; we first ensure the data (in `result.data`) has all the records we require; it could be that the query is wrong (but the data looks good). Then we can check to see why we are getting less columns than we expect: Step through the formatting code to understand what it is doing. Also, understand how the properties for the columns in `for c in cols` are used to decide what the `header` should be.
+> Put a breakpoint in the code at [setop_table.py, line 323](https://github.com/klahnakoski/jx-sqlite/blob/04752922974a84f225dd9b058c4c939989b613e9/jx_sqlite/setop_table.py#L323) (Notice the test is named "set_ops" and the code is named similarly as "setop") This is the point just before the data is formatted into table form; we first ensure the data (in `result.data`) has all the records we require; it could be that the query is wrong (but the data looks good). Then we can check to see why we are getting less columns than we expect: Step through the formatting code to understand what it is doing. Also, understand how the properties for the columns in `for c in cols` are used to decide what the `header` should be.
 
 
 **May you give me test that is complicated to solve?**
 
-When you run the tests you will notice many "deep" tests are failing.  Here is one of the failing tests [`test_deep_select_column(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_deep_ops.py#L25)
+> When you run the tests you will notice many "deep" tests are failing.  Here is one of the failing tests [`test_deep_select_column(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_deep_ops.py#L25)
 
-This test is performing a query on the following data:
+>This test is performing a query on the following data:
 
-```python
+>```python
 	"data": [
     	{"_a": [
 	        {"b": "x", "v": 2},
@@ -170,18 +170,18 @@ This test is performing a query on the following data:
 	]
 ```
 
-The important feature of this is the nested array of objects; which is what we are interested in querying.  This test is ensuring you can groupby `_a.b` and calculate the aggregate sum of `_a.v`
+> The important feature of this is the nested array of objects; which is what we are interested in querying.  This test is ensuring you can groupby `_a.b` and calculate the aggregate sum of `_a.v`
 
-But the problem is greater than just getting the correct result; this test can not even insert the data into the database correctly:
+>But the problem is greater than just getting the correct result; this test can not even insert the data into the database correctly:
 
-	caused by
+>	caused by
 	    ERROR: Problem with
 	    ALTER TABLE "testing._a" ADD COLUMN "_a.b.$string" TEXT
    		File "C:\Python27\lib\site-packages\mo_threads\threads.py", line 237, in _run
 	caused by
     	ERROR: duplicate column name: _a.b.$string
 
-So, the problem appears to be some confusion about how the schema is modified before the records are inserted into the database. I have determined that this confusion is caused by bad programming; [so I started refactoring the parts dealing with managing the schema](https://github.com/klahnakoski/jx-sqlite/blob/master/jx_sqlite/alter_table.py). With all the methods in one place, I can now come up with some coherent design for this API: Something that is easy for the rest of the `jx-sqlite` code to manipulate snowflake schemas, and how to build them. The code for this API will be responsible for translating a snowflake schema into a plain relational database schema.
+>So, the problem appears to be some confusion about how the schema is modified before the records are inserted into the database. I have determined that this confusion is caused by bad programming; [so I started refactoring the parts dealing with managing the schema](https://github.com/klahnakoski/jx-sqlite/blob/master/jx_sqlite/alter_table.py). With all the methods in one place, I can now come up with some coherent design for this API: Something that is easy for the rest of the `jx-sqlite` code to manipulate snowflake schemas, and how to build them. The code for this API will be responsible for translating a snowflake schema into a plain relational database schema.
 
 
 **Why Python 2.7? Are you a dinosaur?**
