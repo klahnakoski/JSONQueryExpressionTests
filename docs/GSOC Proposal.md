@@ -174,12 +174,14 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 
 >But the problem is greater than just getting the correct result; this test can not even insert the data into the database correctly:
 
->	caused by
+>```
+	caused by
 	    ERROR: Problem with
 	    ALTER TABLE "testing._a" ADD COLUMN "_a.b.$string" TEXT
    		File "C:\Python27\lib\site-packages\mo_threads\threads.py", line 237, in _run
 	caused by
     	ERROR: duplicate column name: _a.b.$string
+```
 
 >So, the problem appears to be some confusion about how the schema is modified before the records are inserted into the database. I have determined that this confusion is caused by bad programming; [so I started refactoring the parts dealing with managing the schema](https://github.com/klahnakoski/jx-sqlite/blob/master/jx_sqlite/alter_table.py). With all the methods in one place, I can now come up with some coherent design for this API: Something that is easy for the rest of the `jx-sqlite` code to manipulate snowflake schemas, and how to build them. The code for this API will be responsible for translating a snowflake schema into a plain relational database schema.
 
