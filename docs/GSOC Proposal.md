@@ -83,6 +83,7 @@ Having the machine manage the data schema gives us a new set of tools:
 * Elasticsearch 1.x has limited automatic schema detection which has proven useful for indexing and summarizing data of unknown shapes. We would like to generalize this nice feature and and bring machine managed schemas to other datastores.   
 * Oracle uses [json_*](http://www.oracle.com/technetwork/database/sql-json-wp-2604702.pdf) functions to define views which can operate on JSON. It has JSON path expressions; mimicking MDX, but the overall query syntax is clunky. Links: [A](https://docs.oracle.com/database/121/ADXDB/json.htm#ADXDB6246), [B](https://blogs.oracle.com/jsondb/entry/s)
 * Spark has [Schema Merging](http://spark.apache.org/docs/latest/sql-programming-guide.html#schema-merging) and nested object arrays can be accessed using [explode()](https://spark.apache.org/docs/latest/api/python/pyspark.sql.html?highlight=explode#pyspark.sql.functions.explode). Spark is a little more elegant, despite the the fact it exposes *how* the query executes.
+* Sqlite has the [JSON1 connector](https://www.sqlite.org/json1.html) - Which is a limited form of Oracle's solution; it requires manual schema translation which complicates queries. 
 
 These existing solutions solve the hard problems from the bottom up; managing file formats, organizing indexes, managing resources and query planning. Each built their own stack with their own query conventions guided by the limitations of architecture they built. 
 
@@ -131,10 +132,22 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 > Building your own solution from scratch is a reasonable path to take.  This will allow you to understand the problem without understanding how my incomplete solution tried to solve the problem. It may be less work overall. You can fork the [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) code, remove all the implementation and start writing code that will pass tests. 
 
 
+**Can I fork ActiveData?**
+
+> Forking ActiveData is not a good idea: ActiveData works with ElasticSearch 1.7 which can already deal with nested object arrays, and perform schema merging. Elasticsearch uses a completely different data model from relational databases.Tracking the nested object array schema and translating the queries is the hard part of using Sqlite.
+
+
 **What is to be done next in `jx-sqlite`?**
 
 > If you are comfortable with extending [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master), then it is obvious to ask where is the hole to be filled:
 > The majority of the problem is performing the deep queries: When JSON documents are added, the library is responsible for creating tables to hold the contents of any arrays - this is broken because the schema management is not clear and there are bugs. The current code is too complicated to understand in a single sitting; so I started a refactor to that will provide an API to a snowflake schema; it will map a hierarchical (snowflake) schema to a sqlite relational database. Hopefully, the JSON <-> Snowflake <-> sqlite transform will prove easier to understand and we can pass some of the more complicated tests.
+
+**What about the JSON1 connector for Sqlite?**
+
+> The [JSON1 connector](https://www.sqlite.org/json1.html) is a limited form of Oracle's JSON query features; it provides functions over a BLOB, and this limits what the database can do to make queries faster. I want a solution that can leverage the features of a database; like profile statistics, query optimization, ability to add indexes, materialized views, and SQL.
+
+> Yes, including SQL: JSON query expressions are designed to make complex data easy to query, but they are limited to viewing data as belonging to a data cube; having general SQL expressions opens the data up to more complex analysis. With JSON properties fully decomposed to the database we get both complex and optimized queries.
+
 
 **Why does `jx-sqlite` use pyLibrary?**
 
