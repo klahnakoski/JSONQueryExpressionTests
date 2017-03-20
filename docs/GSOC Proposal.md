@@ -205,13 +205,13 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 
 **Where will this code be used?**
 
-> 1a) It will enhance ActiveData: When ActiveData pulls data from the cluster, it would be nice to handle sub queries on that data before it gets sent back to the requester. Python is too slow to manipulate data, so we either require a temporary database or Numpy or Pandas. The hope is this project can handle the JSON coming from Elasticsearch queries and perform the required post-processing queries on that data.
-
-> 1b) It will enhance ActiveData: ActiveData tracks the Elasticsearch cluster metadata to help translate queries. This is too much data to handle quickly with pure Python. The hope is this project will serve as a fast metadata database.   
-
-> 2) SpotManager:  The SpotManager is responsible for bidding for spot instances on AWS. It deals with a reasonable amount of data, but is slow because the queries are implemented in Python. Sqlite can go much faster for the given data volume.
-
-> 3) esShardBalancer - Another pure-python program than can be made to go faster if queries were implemented in Sqlite.
+> 1. It will enhance ActiveData: When ActiveData pulls data from the cluster, it would be nice to handle sub queries on that data before it gets sent back to the requester. Python is too slow to manipulate data, so we either require a temporary database or Numpy or Pandas. The hope is this project can handle the JSON coming from Elasticsearch queries and perform the required post-processing queries on that data.
+>
+> 2. It will enhance ActiveData: ActiveData tracks the Elasticsearch cluster metadata to help translate queries. This is too much data to handle quickly with pure Python. The hope is this project will serve as a fast metadata database.   
+>
+> 3. SpotManager:  The SpotManager is responsible for bidding for spot instances on AWS. It deals with a reasonable amount of data, but is slow because the queries are implemented in Python. Sqlite can go much faster for the given data volume.
+>
+> 4. esShardBalancer - Another pure-python program than can be made to go faster if queries were implemented in Sqlite.
 
 > In general, code can make better decisions if it has lots of data. Python is too slow for this task, so we need a module that can handle data for us; something that accepts queries that will return short results to make decisions on. This data can come from any number of systems, in large quantities, and of changing schema over time. **We do not want to be manually declaring schemas for relations and properties not used by the code.** At the same time, we want to keep all the data in case we want to make decisions on it later, either as feature enhancement or for manual debugging.
 
