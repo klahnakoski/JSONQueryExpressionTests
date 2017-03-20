@@ -128,7 +128,7 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 > Be sure to read this document, and read the links. Especially [JSON Query Expressions](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx.md), which will give you a high level idea of what you will be building.
 > 
 > I attempted a solution ([jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master)) but it is far from a complete. The tests that do pass are the easy tests the hard tests remain; It might require a refactoring of the code. I only suggest extending this code if you are unusually good at understanding other people's code.
-
+>
 > Building your own solution from scratch is a reasonable path to take.  This will allow you to understand the problem without understanding how my incomplete solution tried to solve the problem. It may be less work overall. You can fork the [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) code, remove all the implementation and start writing code that will pass tests. 
 
 
@@ -145,7 +145,7 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 **What about the JSON1 connector for Sqlite?**
 
 > The [JSON1 connector](https://www.sqlite.org/json1.html) is a limited form of Oracle's JSON query features; it provides functions over a BLOB, and this limits what the database can do to make queries faster. I want a solution that can leverage the features of a database; like profile statistics, query optimization, ability to add indexes, materialized views, and SQL.
-
+>
 > Yes, including SQL: JSON query expressions are designed to make complex data easy to query, but they are limited to viewing data as belonging to a data cube; having general SQL expressions opens the data up to more complex analysis. With JSON properties fully decomposed to the database we get both complex and optimized queries.
 
 
@@ -157,9 +157,9 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 **May you give me a test that is easy to solve?**
 
 > Here is a test that is relatively easy to solve: [`test_select3_object(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_set_ops.py#L942) It is returning the wrong number of columns when returning `"format":"table"`.
-
+>
 > This test is about interpreting the meaning of `{"select": ["o", "a.*"]}` in the context of formatting as a table.  As per [the user documentation on `select`](https://github.com/klahnakoski/ActiveData/blob/dev/docs/jx_clause_select.md#selecting-leaves-), we expect the star (`*`) to expand all leaves into individual columns, which did not happen in this test.
-
+>
 > Put a breakpoint in the code at [setop_table.py, line 323](https://github.com/klahnakoski/jx-sqlite/blob/04752922974a84f225dd9b058c4c939989b613e9/jx_sqlite/setop_table.py#L323) (Notice the test is named "set_ops" and the code is named similarly as "setop") This is the point just before the data is formatted into table form; we first ensure the data (in `result.data`) has all the records we require; it could be that the query is wrong (but the data looks good). Then we can check to see why we are getting less columns than we expect: Step through the formatting code to understand what it is doing. Also, understand how the properties for the columns in `for c in cols` are used to decide what the `header` should be.
 
 
@@ -168,7 +168,7 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 > When you run the tests you will notice many "deep" tests are failing.  Here is one of the failing tests [`test_deep_select_column(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_deep_ops.py#L25)
 > 
 >This test is performing a query on the following data:
->```
+><code>
 	"data": [
     	{"_a": [
 	        {"b": "x", "v": 2},
@@ -180,18 +180,18 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 	    ]},
 	    {"c": "x"}
 	]
-```
+</code>
 > The important feature of this is the nested array of objects; which is what we are interested in querying.  This test is ensuring you can groupby `_a.b` and calculate the aggregate sum of `_a.v`
 > 
 > But the problem is greater than just getting the correct result; this test can not even insert the data into the database correctly:
->```
+><code>
 	caused by
 	    ERROR: Problem with
 	    ALTER TABLE "testing._a" ADD COLUMN "_a.b.$string" TEXT
    		File "C:\Python27\lib\site-packages\mo_threads\threads.py", line 237, in _run
 	caused by
     	ERROR: duplicate column name: _a.b.$string
-```
+</code>
 >
 > So, the problem appears to be some confusion about how the schema is modified before the records are inserted into the database. I have determined that this confusion is caused by bad programming; [so I started refactoring the parts dealing with managing the schema](https://github.com/klahnakoski/jx-sqlite/blob/master/jx_sqlite/alter_table.py). With all the methods in one place, I can now come up with some coherent design for this API: Something that is easy for the rest of the `jx-sqlite` code to manipulate snowflake schemas, and how to build them. The code for this API will be responsible for translating a snowflake schema into a plain relational database schema.
 
