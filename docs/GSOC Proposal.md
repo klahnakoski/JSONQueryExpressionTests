@@ -121,7 +121,7 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 * **Machine Managed indexes** - Databases indexes act much like a columnar datastore. If we account for the common queries received, we may be able to choose the right indexes to improve query response. We might just beat Elasticsearch!
 * **Subqueries** - Allowing heterogeneous datastores also allows us to split queries across platforms so each backend can handle the part it is best at; By dispatching data aggregation and filtering to a cluster we get fast response over big data, while a local database can use previous query results to perform sophisticated cross referencing and window functions.
 
-##Questions and Answers
+## Questions and Answers
 
 **Where do I start?**
 
@@ -166,10 +166,8 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 **May you give me test that is complicated to solve?**
 
 > When you run the tests you will notice many "deep" tests are failing.  Here is one of the failing tests [`test_deep_select_column(self)`](https://github.com/klahnakoski/jx-sqlite/blob/master/tests/test_jx/test_deep_ops.py#L25)
-
 >This test is performing a query on the following data:
-
->```python
+><pre>python
 	"data": [
     	{"_a": [
 	        {"b": "x", "v": 2},
@@ -181,7 +179,7 @@ Even though Sqlite is preferred, the choice of datastore is not very important t
 	    ]},
 	    {"c": "x"}
 	]
-```
+</pre>
 
 > The important feature of this is the nested array of objects; which is what we are interested in querying.  This test is ensuring you can groupby `_a.b` and calculate the aggregate sum of `_a.v`
 
