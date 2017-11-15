@@ -11,12 +11,13 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from unittest import skipIf
-
+from jx_base.expressions import NULL
 from mo_dots import wrap
 from mo_math import Math
-from pyLibrary.queries import query
-from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings, NULL
+from unittest import skipIf
+
+from jx_base.query import DEFAULT_LIMIT, MAX_LIMIT
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
 
 lots_of_data = wrap([{"a": i} for i in range(30)])
 
@@ -24,7 +25,7 @@ lots_of_data = wrap([{"a": i} for i in range(30)])
 class TestSetOps(BaseTestCase):
 
     def test_star(self):
-       test = {
+        test = {
            "data": [{"a": 1}],
            "query": {
                "select": "*",
@@ -34,7 +35,7 @@ class TestSetOps(BaseTestCase):
                "meta": {"format": "list"}, "data": [{"a": 1}]
            }
        }
-       self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_simplest(self):
         test = {
@@ -65,7 +66,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_on_missing_field(self):
         test = {
@@ -106,7 +107,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_select_on_shallow_missing_field(self):
@@ -148,7 +149,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_single_deep_select(self):
@@ -167,7 +168,8 @@ class TestSetOps(BaseTestCase):
                 "sort": "a.b.c"  # SO THE CUBE COMPARISON WILL PASS
             },
             "expecting_list": {
-                "meta": {"format": "list"}, "data": [1, 2, 3, 4, 5]
+                "meta": {"format": "list"},
+                "data": [1, 2, 3, 4, 5]
             },
             "expecting_table": {
                 "meta": {"format": "table"},
@@ -187,7 +189,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_single_select_alpha(self):
@@ -219,7 +221,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_single_rename(self):
@@ -252,7 +254,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_single_no_select(self):
         test = {
@@ -284,9 +286,8 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-    @skipIf(global_settings.use=="sqlite", "not implemented yet, is not needed for small data")
     def test_id_select(self):
         """
         ALWAYS GOOD TO HAVE AN ID, CALL IT "_id"
@@ -321,7 +322,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_id_value_select(self):
         """
@@ -342,7 +343,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_single_star_select(self):
@@ -376,7 +377,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_dot_select(self):
         test = {
@@ -409,9 +410,8 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-    @skipIf(global_settings.use == "elasticsearch", "ES only accepts objects, not values")
     def test_list_of_values(self):
         test = {
             "data": ["a", "b"],
@@ -442,7 +442,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_all_from_list_of_objects(self):
         test = {
@@ -482,7 +482,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     @skipIf(True, "Too complicated")
     def test_select_into_children(self):
@@ -594,9 +594,9 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-    @skipIf(global_settings.use=="sqlite", "no need for limit when using own resources")
+    @skipIf(global_settings.use == "sqlite", "no need for limit when using own resources")
     def test_max_limit(self):
         test = wrap({
             "data": lots_of_data,
@@ -609,7 +609,7 @@ class TestSetOps(BaseTestCase):
 
         self.utils.fill_container(test)
         result = self.utils.execute_query(test.query)
-        self.assertEqual(result.meta.es_query.size, query.MAX_LIMIT)
+        self.assertEqual(result.meta.es_query.size, MAX_LIMIT)
 
     def test_default_limit(self):
         test = wrap({
@@ -623,15 +623,15 @@ class TestSetOps(BaseTestCase):
         self.utils.fill_container(test)
         test.query.format = "list"
         result = self.utils.execute_query(test.query)
-        self.assertEqual(len(result.data), query.DEFAULT_LIMIT)
+        self.assertEqual(len(result.data), DEFAULT_LIMIT)
 
         test.query.format = "table"
         result = self.utils.execute_query(test.query)
-        self.assertEqual(len(result.data), query.DEFAULT_LIMIT)
+        self.assertEqual(len(result.data), DEFAULT_LIMIT)
 
         test.query.format = "cube"
         result = self.utils.execute_query(test.query)
-        self.assertEqual(len(result.data.value), query.DEFAULT_LIMIT)
+        self.assertEqual(len(result.data.value), DEFAULT_LIMIT)
 
     def test_specific_limit(self):
         test = wrap({
@@ -676,7 +676,7 @@ class TestSetOps(BaseTestCase):
                 {"a": {"b": 0, "c": 0}, "d": 7},
                 {"a": {"b": 0, "c": 1}},
                 {"a": {"b": 1, "c": 0}},
-                {"a": {"b": 1, "c": 1}},
+                {"a": {"b": 1, "c": 1}}
             ],
             "query": {
                 "from": TEST_TABLE,
@@ -685,10 +685,10 @@ class TestSetOps(BaseTestCase):
             },
             "expecting_list": {
                 "meta": {"format": "list"}, "data": [
-                    {"a.b": 0, "a.c": 0, "d": 7},
-                    {"a.b": 0, "a.c": 1},
-                    {"a.b": 1, "a.c": 0},
-                    {"a.b": 1, "a.c": 1}
+                {"a.b": 0, "a.c": 0, "d": 7},
+                {"a.b": 0, "a.c": 1},
+                {"a.b": 1, "a.c": 0},
+                {"a.b": 1, "a.c": 1}
                 ]
             },
             "expecting_table": {
@@ -716,7 +716,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_w_deep_star(self):
         test = {
@@ -762,7 +762,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_expression(self):
         test = {
@@ -806,7 +806,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_object(self):
         """
@@ -831,7 +831,7 @@ class TestSetOps(BaseTestCase):
                     {"a": {"b": "x", "v": 2}},
                     {"a": {"b": "x", "v": 5}},
                     {"a": {"b": "x", "v": 7}},
-                    NULL
+                    {}
                 ]
             },
             "expecting_table": {
@@ -841,7 +841,7 @@ class TestSetOps(BaseTestCase):
                     [{"b": "x", "v": 2}],
                     [{"b": "x", "v": 5}],
                     [{"b": "x", "v": 7}],
-                    [NULL]
+                    [{}]
                 ]
             },
             "expecting_cube": {
@@ -857,12 +857,12 @@ class TestSetOps(BaseTestCase):
                         {"b": "x", "v": 2},
                         {"b": "x", "v": 5},
                         {"b": "x", "v": 7},
-                        NULL
+                        {}
                     ]
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_leaves(self):
         """
@@ -887,7 +887,7 @@ class TestSetOps(BaseTestCase):
                     {"a.b": "x", "a.v": 2},
                     {"a.b": "x", "a.v": 5},
                     {"a.b": "x", "a.v": 7},
-                    NULL
+                    {}
                 ]
             },
             "expecting_table": {
@@ -914,7 +914,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_value_object(self):
         """
@@ -939,7 +939,7 @@ class TestSetOps(BaseTestCase):
                     {"b": "x", "v": 2},
                     {"b": "x", "v": 5},
                     {"b": "x", "v": 7},
-                    NULL
+                    {}
                 ]
             },
             "expecting_table": {
@@ -949,7 +949,7 @@ class TestSetOps(BaseTestCase):
                     [{"b": "x", "v": 2}],
                     [{"b": "x", "v": 5}],
                     [{"b": "x", "v": 7}],
-                    [NULL]
+                    [{}]
                 ]
             },
             "expecting_cube": {
@@ -965,12 +965,12 @@ class TestSetOps(BaseTestCase):
                         {"b": "x", "v": 2},
                         {"b": "x", "v": 5},
                         {"b": "x", "v": 7},
-                        NULL
+                        {}
                     ]
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select2_object(self):
         """
@@ -1005,7 +1005,7 @@ class TestSetOps(BaseTestCase):
                     [3, {"b": "x", "v": 2}],
                     [1, {"b": "x", "v": 5}],
                     [2, {"b": "x", "v": 7}],
-                    [4, NULL]
+                    [4, {}]
                 ]
             },
             "expecting_cube": {
@@ -1021,13 +1021,13 @@ class TestSetOps(BaseTestCase):
                         {"b": "x", "v": 2},
                         {"b": "x", "v": 5},
                         {"b": "x", "v": 7},
-                        NULL
+                        {}
                     ],
                     "o": [3, 1, 2, 4]
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_select3_object(self):
@@ -1081,10 +1081,8 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-
-    @skipIf(global_settings.is_travis, "not expected to pass yet")
     def test_select_nested_column(self):
         test = {
             "data": [
@@ -1106,8 +1104,8 @@ class TestSetOps(BaseTestCase):
                 "meta": {"format": "table"},
                 "header": ["_a"],
                 "data": [
-                    [[{"b": 1, "c": 1}, {"b": 2, "c": 1}]],
-                    [[{"b": 1, "c": 2}, {"b": 2, "c": 2}]]
+                   [[{"b": 1, "c": 1}, {"b": 2, "c": 1}]],
+                   [[{"b": 1, "c": 2}, {"b": 2, "c": 2}]]
                 ]
             },
             "expecting_cube": {
@@ -1126,5 +1124,48 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
+
+    def test_select_array_as_value(self):
+        test = {
+            "data": [
+                {"_a": [{"b": 1, "c": 1}, {"b": 2, "c": 1}]},
+                {"_a": [{"b": 1, "c": 2}, {"b": 2, "c": 2}]}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": "_a"
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    [{"b": 1, "c": 1}, {"b": 2, "c": 1}],
+                    [{"b": 1, "c": 2}, {"b": 2, "c": 2}]
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["_a"],
+                "data": [
+                   [[{"b": 1, "c": 1}, {"b": 2, "c": 1}]],
+                   [[{"b": 1, "c": 2}, {"b": 2, "c": 2}]]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "rownum",
+                        "domain": {"type": "rownum", "min": 0, "max": 2, "interval": 1}
+                    }
+                ],
+                "data": {
+                    "_a": [
+                        [{"b": 1, "c": 1}, {"b": 2, "c": 1}],
+                        [{"b": 1, "c": 2}, {"b": 2, "c": 2}]
+                    ]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
 

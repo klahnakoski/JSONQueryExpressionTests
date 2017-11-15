@@ -13,6 +13,7 @@ from __future__ import unicode_literals
 
 from unittest import skipIf
 
+from jx_base.expressions import NULL
 from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
 
 
@@ -20,7 +21,7 @@ class TestSchemaMerging(BaseTestCase):
     """
     TESTS THAT DEMONSTRATE DIFFERENT SCHEMAS
     """
-    @skipIf(global_settings.use == "elasticsearch", "require dynamic typing before overloading objects and primitives")
+
     def test_select(self):
         test = {
             "data": [
@@ -44,11 +45,9 @@ class TestSchemaMerging(BaseTestCase):
                 "meta": {"format": "table"},
                 "header": ["a"],
                 "data": [
-                    [
                         ["b"],
                         [[{"b": 1}, {"b": 2}]],
                         [3]
-                    ]
                 ]
             },
             "expecting_cube": {
@@ -61,15 +60,213 @@ class TestSchemaMerging(BaseTestCase):
                 ],
                 "data": {
                     "a": [
-                        ["b"],
-                        [[{"b": 1}, {"b": 2}]],
-                        [3]
+                        "b",
+                        [{"b": 1}, {"b": 2}],
+                        3
                     ]
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
+    def test_mixed_primitives(self):
+        test = {
+            "data": [
+                # _id USED TO CONTROL INSERT
+                {"_id": "1", "a": "b"},
+                {"_id": "2", "a": 3},
+                {"_id": "3", "a": "c"}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": "a"
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    "b",
+                    3,
+                    "c"
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a"],
+                "data": [
+                    ["b"],
+                    [3],
+                    ["c"]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "rownum",
+                        "domain": {"type": "rownum", "min": 0, "max": 3, "interval": 1}
+                    }
+                ],
+                "data": {
+                    "a": ["b", 3, "c"]
+                }
+            }
+        }
+        self.utils.execute_tests(test, tjson=True)
 
+    @skipIf(global_settings.is_travis, "not expected to pass yet")
+    def test_dots_in_property_names(self):
+        test = {
+            "data": [
+                {"a.html": "hello"},
+                {"a": {"html": "world"}}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": "a\\.html"
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    "hello",
+                    NULL
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a\\.html"],
+                "data": [
+                    ["hello"],
+                    [NULL]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "rownum",
+                        "domain": {"type": "rownum", "min": 0, "max": 2, "interval": 1}
+                    }
+                ],
+                "data": {
+                    "a\\.html": ["hello", NULL]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
 
+    @skipIf(global_settings.is_travis, "not expected to pass yet")
+    def test_dots_in_property_names2(self):
+        test = {
+            "data": [
+                {"a.html": "hello"},
+                {"a": {"html": "world"}}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": "a.html"
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    NULL,
+                    "world"
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a.html"],
+                "data": [
+                    [NULL],
+                    ["world"]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "rownum",
+                        "domain": {"type": "rownum", "min": 0, "max": 2, "interval": 1}
+                    }
+                ],
+                "data": {
+                    "a.html": [NULL, "world"]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
+    @skipIf(global_settings.is_travis, "not expected to pass yet")
+    def test_dots_in_property_names3(self):
+        test = {
+            "data": [
+                {"a.html": "hello"},
+                {"a": {"html": "world"}}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": ["a\\.html", "a.html"]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"a.html": "hello"},
+                    {"a": {"html": "world"}}
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a\\.html", "a.html"],
+                "data": [
+                    ["hello", NULL],
+                    [NULL, "world"]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "rownum",
+                        "domain": {"type": "rownum", "min": 0, "max": 2, "interval": 1}
+                    }
+                ],
+                "data": {
+                    "a\\.html": ["hello", NULL],
+                    "a.html": [NULL, "world"]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
+    def test_count(self):
+        test = {
+            "data": [
+                {"a": "b"},
+                {"a": {"b": 1}},
+                {"a": {}},
+                {"a": [{"b": 1}, {"b": 2}]},  # TEST THAT INNER CAN BE MAPPED TO NESTED
+                {"a": {"b": 4}},  # TEST THAT INNER IS MAPPED TO NESTED, AFTER SEEING NESTED
+                {"a": 3},
+                {}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": {"value": "a", "aggregate": "count"}
+            },
+            "expecting_list": {
+                "meta": {"format": "value"},
+                "data": 5
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a"],
+                "data": [[5]]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "data": {
+                    "a": 5
+                }
+            }
+        }
+        self.utils.execute_tests(test)
 

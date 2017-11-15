@@ -11,7 +11,8 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from tests.test_jx import BaseTestCase, TEST_TABLE, NULL
+from jx_base.expressions import NULL
+from tests.test_jx import BaseTestCase, TEST_TABLE
 
 
 class TestEdge2(BaseTestCase):
@@ -119,7 +120,7 @@ class TestEdge2(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_sum_rows(self):
         test = {
@@ -192,7 +193,7 @@ class TestEdge2(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_avg_rows_w_default(self):
         test = {
@@ -291,7 +292,7 @@ class TestEdge2(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_sum_rows_w_domain(self):
         test = {
@@ -391,12 +392,12 @@ class TestEdge2(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_using_missing_between(self):
         test = {
             "data": [
-                {"url": NULL},
+                {"url": None},
                 {"url": "/"},
                 {"url": "https://hg.mozilla.org/"},
                 {"url": "https://hg.mozilla.org/a/"},
@@ -437,18 +438,18 @@ class TestEdge2(BaseTestCase):
                 ]}
 
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
 two_dim_test_data = [
     {"a": "x", "b": "m", "v": 2},
     {"a": "x", "b": "n", "v": 3},
-    {"a": "x", "b": NULL, "v": 5},
+    {"a": "x", "b": None, "v": 5},
     {"a": "y", "b": "m", "v": 7},
     {"a": "y", "b": "n", "v": 11},
-    {"a": "y", "b": NULL, "v": 13},
-    {"a": NULL, "b": "m", "v": 17},
-    {"a": NULL, "b": "n", "v": 19},
+    {"a": "y", "b": None, "v": 13},
+    {"a": None, "b": "m", "v": 17},
+    {"a": None, "b": "n", "v": 19},
     {"a": "x", "b": "m", "v": 27},
     {"a": "y", "b": "n", "v": 39}
 ]

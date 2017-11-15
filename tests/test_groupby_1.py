@@ -11,9 +11,13 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from mo_dots import wrap, set_default
+from unittest import skipIf
 
-from tests.test_jx import BaseTestCase, TEST_TABLE, NULL
+from future.utils import text_type
+
+from jx_base.expressions import NULL
+from mo_dots import wrap, set_default
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
 
 
 class TestgroupBy1(BaseTestCase):
@@ -42,7 +46,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_rows(self):
         test = {
@@ -71,7 +75,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_self(self):
         test = {
@@ -100,7 +104,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_other(self):
         test = {
@@ -128,7 +132,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_2(self):
         test = {
@@ -160,7 +164,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_sum_column(self):
         test = {
@@ -189,8 +193,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_where(self):
         test = {
@@ -214,7 +217,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_where_w_dimension(self):
         test = {
@@ -238,7 +241,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_bad_groupby(self):
         test = {
@@ -255,7 +258,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception, self.utils.execute_es_tests, test)
+        self.assertRaises(Exception, self.utils.execute_tests, test)
 
     def test_empty_default_domain(self):
         test = {
@@ -278,8 +281,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_many_aggs_on_one_column(self):
         # ES WILL NOT ACCEPT TWO (NAIVE) AGGREGATES ON SAME FIELD, COMBINE THEM USING stats AGGREGATION
@@ -318,8 +320,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_error_on_same_column_name(self):
         test = {
@@ -337,7 +338,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception, self.utils.execute_es_tests, test)
+        self.assertRaises(Exception, self.utils.execute_tests, test)
 
     def test_groupby_is_table(self):
         test = {
@@ -359,11 +360,11 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_groupby_left_id(self):
         test = {
-            "data": [set_default(d, {"_id": "aa"+unicode(i)}) for i, d in enumerate(simple_test_data)],
+            "data": [set_default(d, {"_id": "aa" + text_type(i)}) for i, d in enumerate(simple_test_data)],
             "query": {
                 "from": TEST_TABLE,
                 "groupby": {"name": "prefix", "value": {"left": {"_id": 2}}}
@@ -376,9 +377,10 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-    def test_groupby_value(self):
+    @skipIf(global_settings.es14, "not implemented yet")
+    def test_groupby_multivalue_nested(self):
         test = {
             "data": [
                 {"a": 1, "b": [1, 2, 3]},
@@ -418,6 +420,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
+        self.utils.execute_tests(test)
 
     def test_groupby_object(self):
         test = {
@@ -445,6 +448,8 @@ class TestgroupBy1(BaseTestCase):
                 ]
             },
             "expecting_table": {
+              #  "meta": {"format": "table"}, this meta property is not included as
+              #  test is ensuring the default format is table when given a groupby clause
                 "header": ["g", "count"],
                 "data": [
                     [{"a": "b", "v": 1}, 2],
@@ -455,7 +460,7 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_groupby_object_star(self):
         test = {
@@ -463,8 +468,8 @@ class TestgroupBy1(BaseTestCase):
                 {"g": {"a": "c", "v": 1}},
                 {"g": {"a": "b", "v": 1}},
                 {"g": {"a": "b", "v": 1}},
-                {"g": {"v": 2}},
-                {"g": {"a": "b"}},
+                {"g": {          "v": 2}},
+                {"g": {"a": "b"        }},
                 {"g": {"a": "c", "v": 2}},
                 {"g": {"a": "c", "v": 2}}
             ],
@@ -474,7 +479,7 @@ class TestgroupBy1(BaseTestCase):
             },
             "expecting_list": {
                 "meta": {"format": "list"},
-                "data":[
+                "data": [
                     {"g.a": "b", "g.v": 1, "count": 2},
                     {"g.a": "b", "count": 1},
                     {"g.a": "c", "g.v": 2, "count": 2},
@@ -493,7 +498,42 @@ class TestgroupBy1(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
+
+    @skipIf(global_settings.es14, "not implemented yet")
+    def test_groupby_multivalue_naive(self):
+        test = {
+            "data": [
+                {"r": {"t": ["a", "b"]}},
+                {"r": {"t": ["b", "a"]}},
+                {"r": {"t": ["a"]}},
+                {"r": {"t": ["b"]}},
+                {},
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "groupby": ["r.t"]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"r": {"t": ["a", "b"]}, "count": 2},
+                    {"r": {"t": "b"}, "count": 1},
+                    {"r": {"t": "a"}, "count": 1},
+                    {"r": {"t": NULL}, "count": 1},
+                ]
+            },
+            "expecting_table": {
+                "header": ["r.t", "count"],
+                "data": [
+                    [["a", "b"], 2],
+                    ["a", 1],
+                    ["b", 1],
+                    [NULL, 1]
+                ]
+            }
+        }
+        self.utils.execute_tests(test)
 
 # TODO: AGG SHALLOW FIELD WITH DEEP GROUPBY
 # {

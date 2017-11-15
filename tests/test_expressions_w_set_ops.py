@@ -11,9 +11,11 @@
 from __future__ import division
 from __future__ import unicode_literals
 
-from mo_dots import wrap
+from unittest import skipIf
 
-from tests.test_jx import BaseTestCase, TEST_TABLE, NULL
+from jx_base.expressions import NULL
+from mo_dots import wrap
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
 
 lots_of_data = wrap([{"a": i} for i in range(30)])
 
@@ -62,7 +64,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_length_w_inequality(self):
         test = {
@@ -91,7 +93,7 @@ class TestSetOps(BaseTestCase):
                 "data": ["333", "4444", "55555"]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_left(self):
         test = {
@@ -111,7 +113,7 @@ class TestSetOps(BaseTestCase):
                 "data": [NULL, "1", "22", "33", "44"]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_eq(self):
         test = {
@@ -140,7 +142,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_ne(self):
         test = {
@@ -164,16 +166,20 @@ class TestSetOps(BaseTestCase):
                 "meta": {"format": "list"},
                 "data": [
                     {"a": 0, "b": 1},
-                    {"a": 1, "b": 0}
+                    {"a": 0},
+                    {"a": 1, "b": 0},
+                    {"a": 1},
+                    {"b": 0},
+                    {"b": 1},
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_concat(self):
         test = {
             "data": [
-                {"v": "hello", "w": NULL},
+                {"v": "hello", "w": None},
                 {"v": "hello", "w": ""},
                 {"v": "hello", "w": "world"}
             ],
@@ -230,7 +236,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_when(self):
         test = {
@@ -247,7 +253,11 @@ class TestSetOps(BaseTestCase):
             ],
             "query": {
                 "from": TEST_TABLE,
-                "select": ["a", "b", {"name": "io", "value": {"when": {"eq": ["a", "b"]}, "then": 1, "else": 2}}]
+                "select": [
+                    "a",
+                    "b",
+                    {"name": "io", "value": {"when": {"eq": ["a", "b"]}, "then": 1, "else": 2}}
+                ]
             },
             "expecting_list": {
                 "meta": {"format": "list"},
@@ -264,22 +274,90 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-    def test_select_mult_w_when(self):
+    @skipIf(global_settings.use=="sqlite", "Can't handle array of primitives for now")
+    def test_select_when_on_multivalue(self):
         test = {
             "data": [
-                {"a": 0, "b": False},
-                {"a": 1, "b": False},
-                {"a": 2, "b": True},
-                {"a": 3, "b": False},
-                {"a": 4, "b": True},
-                {"a": 5, "b": False},
-                {"a": 6, "b": True},
-                {"a": 7, "b": True},
-                {"a": 8},  # COUNTED, "b" IS NOT true
-                {"b": True},  # NOT COUNTED
-                {"b": False},  # NOT COUNTED
+                {"a": "e"},
+                {"a": "c"},
+                {"a": ["e"]},
+                {"a": ["c"]},
+                {"a": ["e", "c"]},
+                {}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": [
+                    "a",
+                    {"name": "is_e", "value": {"when": {"eq": {"a": "e"}}, "then": 1, "else": 0}},
+                    {"name": "not_e", "value": {"when": {"not": {"eq": {"a": "e"}}}, "then": 1, "else": 0}},
+                    {"name": "is_c", "value": {"when": {"eq": {"a": "c"}}, "then": 1, "else": 0}}
+                ]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"a": "e", "is_e": 1, "not_e": 0, "is_c": 0},
+                    {"a": "c", "is_e": 0, "not_e": 1, "is_c": 1},
+                    {"a": "e", "is_e": 1, "not_e": 0, "is_c": 0},
+                    {"a": "c", "is_e": 0, "not_e": 1, "is_c": 1},
+                    {"a": ["e", "c"], "is_e": 1, "not_e": 0, "is_c": 1},
+                    {"a": NULL, "is_e": 0, "not_e": 1, "is_c": 0}
+                ]
+            }
+        }
+        self.utils.execute_tests(test)
+
+    @skipIf(global_settings.use=="sqlite", "Can't handle array of primitives for now")
+    def test_select_in_w_multivalue(self):
+        test = {
+            "data": [
+                {"a": "e"},
+                {"a": "c"},
+                {"a": ["e"]},
+                {"a": ["c"]},
+                {"a": ["e", "c"]},
+                {}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": [
+                    "a",
+                    {"name": "is_e", "value": {"in": [{"literal": "e"}, "a"]}},
+                    {"name": "not_e", "value": {"not": {"in": [{"literal": "e"}, "a"]}}},
+                    {"name": "is_c", "value": {"in": [{"literal": "c"}, "a"]}},
+                ]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"a": "e", "is_e": True, "not_e": False, "is_c": False},
+                    {"a": "c", "is_e": False, "not_e": True, "is_c": True},
+                    {"a": "e", "is_e": True, "not_e": False, "is_c": False},
+                    {"a": "c", "is_e": False, "not_e": True, "is_c": True},
+                    {"a": ["e", "c"], "is_e": True, "not_e": False, "is_c": True},
+                    {"a": NULL, "is_e": False, "not_e": True, "is_c": False}
+                ]
+            }
+        }
+        self.utils.execute_tests(test)
+
+    def test_select_agg_mult_w_when(self):
+        test = {
+            "data": [
+                {"a": 0, "b": False},                  # 0*1
+                {"a": 1, "b": False},                  # 1*1 = 1
+                {"a": 2, "b": True},                   # 2*0
+                {"a": 3, "b": False},                  # 3*1 = 3
+                {"a": 4, "b": True},                   # 4*0
+                {"a": 5, "b": False},                  # 5*1 = 5
+                {"a": 6, "b": True},                   # 6*0
+                {"a": 7, "b": True},                   # 7*0
+                {"a": 8},  # COUNTED, "b" IS NOT true  # 8*1 = 8
+                {"b": True},  # NOT COUNTED              null * 0 = null
+                {"b": False},  # NOT COUNTED             null * 1 = null
             ],
             "query": {
                 "from": TEST_TABLE,
@@ -303,7 +381,56 @@ class TestSetOps(BaseTestCase):
                 "data": 17
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
+
+    def test_select_mult_w_when(self):
+        test = {
+            "data": [
+                {"a": 0, "b": False},                  # 0*1
+                {"a": 1, "b": False},                  # 1*1 = 1
+                {"a": 2, "b": True},                   # 2*0
+                {"a": 3, "b": False},                  # 3*1 = 3
+                {"a": 4, "b": True},                   # 4*0
+                {"a": 5, "b": False},                  # 5*1 = 5
+                {"a": 6, "b": True},                   # 6*0
+                {"a": 7, "b": True},                   # 7*0
+                {"a": 8},  # COUNTED, "b" IS NOT true  # 8*1 = 8
+                {"b": True},  # NOT COUNTED              null * 0 = null
+                {"b": False}   # NOT COUNTED             null * 1 = null
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": [
+                    {"name": "b", "value": {"when": "b", "then": 0, "else": 1}},
+                    {
+                        "name": "ab",
+                        "value": {
+                            "mult": [
+                                "a",
+                                {"when": "b", "then": 0, "else": 1}
+                            ]
+                        }
+                    }
+                ],
+                "limit": 100
+            },
+            "expecting_list": {
+                "data": [
+                    {"ab": 0, "b": 1},
+                    {"ab": 1, "b": 1},
+                    {"ab": 0, "b": 0},
+                    {"ab": 3, "b": 1},
+                    {"ab": 0, "b": 0},
+                    {"ab": 5, "b": 1},
+                    {"ab": 0, "b": 0},
+                    {"ab": 0, "b": 0},
+                    {"ab": 8, "b": 1},
+                    {"ab": NULL, "b": 1},
+                    {"ab": NULL, "b": 0}
+                ]
+            }
+        }
+        self.utils.execute_tests(test)
 
     def test_select_add(self):
         test = {
@@ -337,7 +464,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_add_w_default(self):
         test = {
@@ -357,7 +484,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_count(self):
         test = {
@@ -391,7 +518,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_average(self):
         test = {
@@ -429,7 +556,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_average_on_none(self):
         test = {
@@ -452,7 +579,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_gt_on_sub(self):
         test = {
@@ -483,7 +610,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_find(self):
         test = {
@@ -506,7 +633,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_left_in_edge(self):
         test = {
@@ -533,7 +660,7 @@ class TestSetOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_left_and_right(self):
         test = {
@@ -587,7 +714,7 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_string(self):
         test = {
@@ -608,7 +735,7 @@ class TestSetOps(BaseTestCase):
                 "data": ["1", "2", "3", "4", "100", NULL]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_number(self):
         test = {
@@ -628,7 +755,7 @@ class TestSetOps(BaseTestCase):
                 "data": [1, 2, 3, 4, NULL]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_div_with_default(self):
         test = {
@@ -647,7 +774,7 @@ class TestSetOps(BaseTestCase):
                 "data": [0, 0.5, 1, 10]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_div_wo_default(self):
         test = {
@@ -666,7 +793,7 @@ class TestSetOps(BaseTestCase):
                 "data": [0, 0.5, 1, NULL]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_between(self):
         test = {
@@ -692,21 +819,21 @@ class TestSetOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_param_left(self):
         test = {
             "data": [
-                {"url": NULL},
+                {},
                 {"url": "/"},
                 #        012345678901234567890123456789
                 {"url": "https://hg.mozilla.org/"},
-                {"url": "https://hg.mozilla.org/a/"},
-                {"url": "https://hg.mozilla.org/b/"},
+                {"url": "https://hg.mozilla.org/a"},
+                {"url": "https://hg.mozilla.org/b"},
                 {"url": "https://hg.mozilla.org/b/1"},
                 {"url": "https://hg.mozilla.org/b/2"},
                 {"url": "https://hg.mozilla.org/b/3"},
-                {"url": "https://hg.mozilla.org/c/"},
+                {"url": "https://hg.mozilla.org/c"},
                 {"url": "https://hg.mozilla.org/d"},
                 {"url": "https://hg.mozilla.org/e"}
             ],
@@ -742,7 +869,67 @@ class TestSetOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
+
+    def test_not_left(self):
+        test = {
+            "data": [
+                {"url": NULL},
+                {"url": "/"},
+                #        012345678901234567890123456789
+                {"url": "https://hg.mozilla.org/"},
+                {"url": "https://hg.mozilla.org/a/"},
+                {"url": "https://hg.mozilla.org/b/"},
+                {"url": "https://hg.mozilla.org/b/1"},
+                {"url": "https://hg.mozilla.org/b/2"},
+                {"url": "https://hg.mozilla.org/b/3"},
+                {"url": "https://hg.mozilla.org/c/"},
+                {"url": "https://hg.mozilla.org/d"},
+                {"url": "https://hg.mozilla.org/e"}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "where": {"and":[
+                    {"prefix":{"url": "https://hg.mozilla.org/"}},
+                    {"not": {"find": [{"not_left": {"url": 23}}, {"literal": "/"}]}}
+                ]}
+            },
+            "expecting_list":{
+                "meta": {"format": "list"},
+                "data": [
+                    {"url": "https://hg.mozilla.org/"},
+                    {"url": "https://hg.mozilla.org/d"},
+                    {"url": "https://hg.mozilla.org/e"}
+                ]
+            }
+        }
+
+        self.utils.execute_tests(test)
+
+    def test_date_on_duration(self):
+        test = {
+            "data": [
+                {"data": 0},
+                {"data": 1}
+            ],
+            "query": {
+                "from": TEST_TABLE,
+                "select": {
+                    "name": "test",
+                    "value": {"date": "day"}
+                }
+
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    86400,
+                    86400
+                ]
+            }
+        }
+
+        self.utils.execute_tests(test)
 
 
 

@@ -13,7 +13,8 @@ from __future__ import unicode_literals
 
 from unittest import skipIf
 
-from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings, NULL
+from jx_base.expressions import NULL
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
 
 
 class TestEdge1(BaseTestCase):
@@ -59,7 +60,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_rows(self):
         test = {
@@ -104,7 +105,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_self(self):
         test = {
@@ -150,7 +151,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_other(self):
         test = {
@@ -196,7 +197,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_sum_default(self):
@@ -250,7 +251,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_2(self):
         test = {
@@ -300,7 +301,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_3(self):
         test = {
@@ -354,7 +355,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
     def test_select_4(self):
@@ -409,8 +410,210 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
+    def test_union_values(self):
+        data = [
+            {"a": "x"},
+            {"a": "x", "c": 2},
+            {"a": "x", "c": [2, 3]},
+            {"a": "y"},
+            {"a": "y", "c": 4},
+            {"a": "y", "c": [5, 6]},
+            {},
+            {"c": 7},
+            {"c": [8, 8]}
+        ]
+
+        test = {
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": {"value": "c", "aggregate": "union"},
+                "edges": ["a"]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"a": "x", "c": {2, 3}},
+                    {"a": "y", "c": {4, 5, 6}},
+                    {"a": NULL, "c": {7, 8}}
+                ]},
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a", "c"],
+                "data": [
+                    ["x", {2, 3}],
+                    ["y", {4, 5, 6}],
+                    [NULL, {7, 8}]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "a",
+                        "allowNulls": True,
+                        "domain": {
+                            "type": "set",
+                            "key": "value",
+                            "partitions": [{"value": "x"}, {"value": "y"}]
+                        }
+                    }
+                ],
+                "data": {
+                    "c": [{2, 3}, {4, 5, 6}, {7, 8}]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
+    def test_union_nested_objects(self):
+        data = [
+            {"a": "x"},
+            {"a": "x", "_c": {"v": 2}},
+            {"a": "x", "_c": [{"v": 2}, {"v": 3}]},
+            {"a": "y"},
+            {"a": "y", "_c": {"v": 4}},
+            {"a": "y", "_c": [{"v": 5}, {"v": 6}]},
+            {},
+            {"_c": {"v": 7}},
+            {"_c": [{"v": 8}, {"v": 8}]}
+        ]
+
+        test = {
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": {"name": "c", "value": "_c.v", "aggregate": "union"},
+                "edges": ["a"]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"a": "x", "c": {2, 3}},
+                    {"a": "y", "c": {4, 5, 6}},
+                    {"a": NULL, "c": {7, 8}}
+                ]},
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a", "c"],
+                "data": [
+                    ["x", {2, 3}],
+                    ["y", {4, 5, 6}],
+                    [NULL, {7, 8}]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "name": "a",
+                        "allowNulls": True,
+                        "domain": {
+                            "type": "set",
+                            "key": "value",
+                            "partitions": [{"value": "x"}, {"value": "y"}]
+                        }
+                    }
+                ],
+                "data": {
+                    "c": [{2, 3}, {4, 5, 6}, {7, 8}]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
+    def test_multiple_union(self):
+        data = [
+            {"a": "x"},
+            {"a": "x", "_c": {"v": 2}},
+            {"a": "x", "_c": [{"v": 2}, {"v": 3}]},
+            {"a": "y"},
+            {"a": "y", "_c": {"v": 4}},
+            {"a": "y", "_c": [{"v": 5}, {"v": 6}]},
+            {},
+            {"_c": {"v": 7}},
+            {"_c": [{"v": 8}, {"v": 8}]}
+        ]
+
+        test = {
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": [
+                    {"name": "c", "value": "_c.v", "aggregate": "union"},
+                    {"name": "a", "value": "a", "aggregate": "union"}
+                ]
+            },
+            "expecting_list": {
+                "meta": {"format": "value"},
+                "data": {
+                    "a": {"x", "y"}, "c": {2, 3, 4, 5, 6, 7, 8}
+                }
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a", "c"],
+                "data": [
+                    [{"x", "y"}, {2, 3, 4, 5, 6, 7, 8}]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "data": {
+                    "c": {2, 3, 4, 5, 6, 7, 8},
+                    "a": {"x", "y"}
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
+    @skipIf(global_settings.es14, "ES14 does not support union on multivalues")
+    def test_multiple_union2(self):
+        data = [
+            {"a": ["x", "z"]},
+            {"a": "x", "_c": {"v": 2}},
+            {"a": "x", "_c": [{"v": 2}, {"v": 3}]},
+            {"a": "y"},
+            {"a": "y", "_c": {"v": 4}},
+            {"a": "y", "_c": [{"v": 5}, {"v": 6}]},
+            {},
+            {"_c": {"v": 7}},
+            {"_c": [{"v": 8}, {"v": 8}]}
+        ]
+
+        test = {
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": [
+                    {"name": "c", "value": "_c.v", "aggregate": "union"},
+                    {"name": "a", "value": "a", "aggregate": "union"}
+                ]
+            },
+            "expecting_list": {
+                "meta": {"format": "value"},
+                "data": {
+                    "a": {"x", "y", "z"}, "c": {2, 3, 4, 5, 6, 7, 8},
+                }
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["a", "c"],
+                "data": [
+                    [{"x", "y", "z"}, {2, 3, 4, 5, 6, 7, 8}]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "data": {
+                    "c": {2, 3, 4, 5, 6, 7, 8},
+                    "a": {"x", "y", "z"}
+                }
+            }
+        }
+        self.utils.execute_tests(test)
 
     def test_sum_column(self):
         test = {
@@ -456,7 +659,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_where(self):
         # THE CONTAINER SHOULD RETURN THE FULL CUBE, DESPITE IT NOT BEING EXPLICIT
@@ -474,7 +677,7 @@ class TestEdge1(BaseTestCase):
                 "meta": {"format": "list"},
                 "data": [
                     {"a": "b"},
-                    {"a": "c", "v": 13},
+                    {"a": "c", "v": 13}
                 ]},
             "expecting_table": {
                 "meta": {"format": "table"},
@@ -502,7 +705,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_where_w_dimension(self):
         test = {
@@ -549,7 +752,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_empty_list(self):
         test = {
@@ -605,7 +808,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_empty_select(self):
         test = {
@@ -662,7 +865,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_empty_select_w_dot_edge(self):
         test = {
@@ -719,7 +922,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_empty_default_domain(self):
         test = {
@@ -776,7 +979,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_empty_default_domain_w_groupby(self):
         test = {
@@ -807,14 +1010,6 @@ class TestEdge1(BaseTestCase):
                             "type": "set",
                             "key": "value",
                             "partitions": [
-                                {
-                                    "dataIndex": 0,
-                                    "value": "b"
-                                },
-                                {
-                                    "dataIndex": 1,
-                                    "value": "c"
-                                }
                             ]
                         }
                     }
@@ -824,7 +1019,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_default_limit(self):
         """
@@ -851,7 +1046,7 @@ class TestEdge1(BaseTestCase):
                     {"k": "h", "v": 8},
                     {"k": "i", "v": 9},
                     {"k": "j", "v": 10},
-                    {"v":13}
+                    {"v": 13}
                 ]
             },
             "expecting_table": {
@@ -900,7 +1095,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_limit_big(self):
         test = {
@@ -980,7 +1175,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_limit_small(self):
         test = {
@@ -1027,7 +1222,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_general_limit(self):
         test = {
@@ -1087,7 +1282,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_expression_on_edge(self):
         data = [
@@ -1159,7 +1354,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_float_range(self):
         data = [
@@ -1233,7 +1428,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_using_expression(self):
         data = [
@@ -1307,7 +1502,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_using_between(self):
         test = {
@@ -1348,7 +1543,7 @@ class TestEdge1(BaseTestCase):
                 ]}
 
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_using_tuple(self):
         data = [
@@ -1426,7 +1621,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     @skipIf(global_settings.use == "sqlite", "no median support")
     def test_percentile(self):
@@ -1477,7 +1672,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_count_constant(self):
         test = {
@@ -1530,7 +1725,7 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_bad_edge_name(self):
         test = {
@@ -1552,7 +1747,7 @@ class TestEdge1(BaseTestCase):
             },
         }
 
-        self.assertRaises("expression is empty", self.utils.execute_es_tests, test)
+        self.assertRaises("expression is empty", self.utils.execute_tests, test)
 
     def test_range(self):
         test = {
@@ -1565,7 +1760,7 @@ class TestEdge1(BaseTestCase):
                 {"k": "f", "s": 5, "e": 8},
                 {"k": "g", "s": 6, "e": 9},
                 {"k": "h", "s": 7, "e": 10},
-                {"k": "i", "s": 8, "e": 11},
+                {"k": "i", "s": 8, "e": 11}
             ],
             "query": {
                 "from": TEST_TABLE,
@@ -1628,7 +1823,7 @@ class TestEdge1(BaseTestCase):
                 "data": {"count": [1, 1, 2, 3, 3, 3, 3, 3, 3, 2]}  # NOT SURE HOW WE ARE COUNTING NULLS
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_edge_w_partition_filters(self):
         test = {
@@ -1684,7 +1879,61 @@ class TestEdge1(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
+
+    def test_edge_w_expr_and_domain(self):
+        test = {
+            "data": structured_test_data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": {"aggregate": "count"},
+                "edges": [
+                    {
+                        "name": "diff",
+                        "value": {"sub": ["v", "b.d"]},
+                        "domain": {
+                            "type": "set",
+                            "partitions": [0.0, 3.0, 6.0]
+                        }
+                    }
+                ]
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"diff": 0, "count": 3},
+                    {"diff": 3, "count": 3},
+                    {"diff": 6, "count": 3},
+                    {"diff": NULL, "count": 4}
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header":["diff", "count"],
+                "data": [
+                    [0, 3],
+                    [3, 3],
+                    [6, 3],
+                    [NULL, 4]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [{
+                    "name": "diff",
+                    "domain": {"partitions": [
+                        {"name": 0},
+                        {"name": 3},
+                        {"name": 6}
+                    ]}
+                }],
+                "data": {
+                    "count": [3, 3, 3, 4]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
 
 # TODO: ALLOW USE OF EDGE VARIABLES IN QUERY
 # IN THIS CASE "timestamp.min" REFERS TO A PART OF THE EDGE
@@ -1722,7 +1971,6 @@ class TestEdge1(BaseTestCase):
 #         "build.revision12"
 #     ]
 # }
-
 
 
 simple_test_data = [

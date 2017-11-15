@@ -14,9 +14,10 @@ from __future__ import unicode_literals
 
 from unittest import skipIf
 
+from jx_base.expressions import NULL
 from mo_dots import wrap
 from mo_math import Math
-from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings, NULL
+from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
 
 lots_of_data = wrap([{"a": i} for i in range(30)])
 
@@ -72,7 +73,7 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_select_column_w_groupby(self):
         test = {
@@ -107,7 +108,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_bad_deep_select_column_w_groupby(self):
         test = {
@@ -124,7 +125,7 @@ class TestDeepOps(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception, self.utils.execute_es_tests, test)
+        self.assertRaises(Exception, self.utils.execute_tests, test)
 
     def test_abs_shallow_select(self):
         # TEST THAT ABSOLUTE COLUMN NAMES WORK (WHEN THEY DO NOT CONFLICT WITH RELATIVE PROPERTY NAME)
@@ -201,8 +202,7 @@ class TestDeepOps(BaseTestCase):
             # }
         }
 
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_select_whole_document(self):
         test = {
@@ -225,9 +225,9 @@ class TestDeepOps(BaseTestCase):
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
-                    {"o": 1, "a": {"b": "x", "v": 5}},
-                    {"o": 2, "a": {"b": "x", "v": 7}},
-                    {"o": 3, "a": [
+                    {"o": 1, "_a": {"b": "x", "v": 5}},
+                    {"o": 2, "_a": {"b": "x", "v": 7}},
+                    {"o": 3, "_a": [
                         {"b": "x", "v": 2},
                         {"b": "y", "v": 3}
                     ]},
@@ -235,7 +235,7 @@ class TestDeepOps(BaseTestCase):
                 ]},
             "expecting_table": {
                 "meta": {"format": "table"},
-                "header": ["o", "a", "c"],
+                "header": ["o", "_a", "c"],
                 "data": [
                     [1, {"b": "x", "v": 5}, NULL],
                     [2, {"b": "x", "v": 7}, NULL],
@@ -258,7 +258,7 @@ class TestDeepOps(BaseTestCase):
                     }
                 ],
                 "data": {
-                    "a": [
+                    "_a": [
                         {"b": "x", "v": 5},
                         {"b": "x", "v": 7},
                         [
@@ -272,6 +272,8 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
+        self.utils.execute_tests(test)
+
 
     def test_select_whole_nested_document(self):
         test = {
@@ -327,7 +329,7 @@ class TestDeepOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_names_w_star(self):
         test = {
@@ -382,8 +384,7 @@ class TestDeepOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_deep_names_select_value(self):
         test = {
@@ -432,16 +433,16 @@ class TestDeepOps(BaseTestCase):
                     }
                 ],
                 "data": {
-                    "a._t": [
+                     "a._t": [
                         {"b": {"s": 1}, "h": {"s": "a-a"}},
                         {"b": {"s": 2}, "h": {"s": "a-b"}},
                         {"b": {"s": 3}, "h": {"s": "a-c"}}
-                    ],
+                    ]
                 }
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_names(self):
         test = {
@@ -474,7 +475,7 @@ class TestDeepOps(BaseTestCase):
                 ]}
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_agg_on_expression(self):
         # TEST WE CAN PERFORM AGGREGATES ON EXPRESSIONS OF DEEP VARIABLES
@@ -522,7 +523,7 @@ class TestDeepOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_agg_on_expression_w_shallow_where(self):
         # TEST WE CAN PERFORM AGGREGATES ON EXPRESSIONS OF DEEP VARIABLES
@@ -558,7 +559,7 @@ class TestDeepOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_agg_w_complicated_where(self):
         # TEST WE CAN PERFORM AGGREGATES ON EXPRESSIONS OF DEEP VARIABLES
@@ -596,7 +597,7 @@ class TestDeepOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_setop_w_complicated_where(self):
         # TEST WE CAN PERFORM AGGREGATES ON EXPRESSIONS OF DEEP VARIABLES
@@ -632,7 +633,7 @@ class TestDeepOps(BaseTestCase):
             }
         }
 
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_id_select(self):
         """
@@ -691,7 +692,7 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_id_value_select(self):
         """
@@ -728,8 +729,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_aggs_on_parent(self):
         test = {
@@ -786,8 +786,7 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
-
+        self.utils.execute_tests(test)
 
     def test_aggs_on_parent_and_child(self):
         test = {
@@ -858,7 +857,7 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_edge_using_list(self):
         data = [{"a": {"_b": [
@@ -936,7 +935,114 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
+
+    def test_deep_agg_w_deeper_select_relative_name_neop(self):
+        data = [{"a": {"_b": [
+            {"r": {"s": "a"}, "v": {"u": 1}},
+            {"r": {"s": "a"}, "v": {"u": 2}},
+            {"r": {"s": "b"}, "v": {"u": 3}},
+            {"r": {"s": "b"}, "v": {"u": 4}},
+            {"r": {"s": "c"}, "v": {"u": 5}},
+            {"v": {"u": 6}}
+        ]}}]
+
+        test = {
+            "data": data,
+            "query": {
+                "select": {"value": "v.u", "aggregate": "sum"},  # TEST RELATIVE NAME IN select
+                "from": TEST_TABLE + ".a._b",
+                "edges": ["r.s"],  # TEST RELATIVE NAME IN edges
+                "where": {"ne": {"r.s": "b"}}  # TEST RELATIVE NAME IN where
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"r": {"s": "a"}, "v": {"u": 3}},
+                    {"r": {"s": "b"}, "v": NULL},
+                    {"r": {"s": "c"}, "v": {"u": 5}},
+                    {"r": NULL, "v": {"u": 6}}
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["r.s", "v.u"],
+                "data": [
+                    ["a", 3],
+                    ["b", NULL],
+                    ["c", 5],
+                    [NULL, 6]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {"name": "r.s", "domain": {"type": "set", "partitions": [
+                        {"value": "a"},
+                        {"value": "b"},
+                        {"value": "c"}
+                    ]}}
+                ],
+                "data": {
+                    "v.u": [3, NULL, 5, 6]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
+    def test_setop_w_deep_select_value_neop(self):
+        data = [{"a": {"_b": [
+            {"r": {"s": "a"}, "v": {"u": 1}},
+            {"r": {"s": "a"}, "v": {"u": 2}},
+            {"r": {"s": "b"}, "v": {"u": 3}},
+            {"r": {"s": "b"}, "v": {"u": 4}},
+            {"r": {"s": "c"}, "v": {"u": 5}},
+            {"v": {"u": 6}}
+        ]}}]
+
+        test = {
+            "data": data,
+            "query": {
+                "select": ["r.s", "v.u"],
+                "from": TEST_TABLE + ".a._b",
+                "where": {"ne": {"r.s": "b"}}
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"r": {"s": "a"}, "v": {"u": 1}},
+                    {"r": {"s": "a"}, "v": {"u": 2}},
+                    {"r": {"s": "c"}, "v": {"u": 5}},
+                    {"v": {"u": 6}}
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["r.s", "v.u"],
+                "data": [
+                    ["a", 1],
+                    ["a", 2],
+                    ["c", 5],
+                    [NULL, 6]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {"name": "rownum", "domain": {
+                        "type": "rownum",
+                        "min": 0,
+                        "max": 4,
+                        "interval": 1
+                    }}
+                ],
+                "data": {
+                    "v.u": [1, 2, 5, 6],
+                    "r.s": ["a", "a", "c", NULL]
+                }
+            }
+        }
+        self.utils.execute_tests(test)
 
     def test_deep_agg_w_deeper_select_relative_name(self):
         data = [{"a": {"_b": [
@@ -989,7 +1095,7 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_setop_w_deep_select_value(self):
         data = [{"a": {"_b": [
@@ -1043,7 +1149,7 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_select_average_on_none(self):
         test = {
@@ -1066,7 +1172,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_missing(self):
         test = {
@@ -1098,7 +1204,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_missing_on_not_exists(self):
         # CHECKING FOR A MISSING COLUMN THAT DOES NOT EXIST SHOULD NOT THROW AN ERROR, RATHER RETURN true
@@ -1124,7 +1230,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_exists(self):
         test = {
@@ -1159,7 +1265,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_or(self):
         test = {
@@ -1199,7 +1305,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_sibling_nested_column(self):
         test = {
@@ -1220,7 +1326,7 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
     def test_deep_star(self):
         test = {
@@ -1243,9 +1349,73 @@ class TestDeepOps(BaseTestCase):
                 ]
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
-    @skipIf(global_settings.is_travis, "not expected to pass yet")
+    def test_deep_select_dot(self):
+        test = {
+            "data": [
+                {"_a": [
+                    {"b": "x", "v": 2},
+                    {"b": "y", "v": 3}
+                ]},
+                {"_a": {"b": "x", "v": 5}},
+                {"_a": [
+                    {"b": "x", "v": 7},
+                ]},
+                {"c": "x"}
+            ],
+            "query": {
+                "from": TEST_TABLE + "._a",
+                "select": {"value": "."},
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"b": "x", "v": 2},
+                    {"b": "y", "v": 3},
+                    {"b": "x", "v": 5},
+                    {"b": "x", "v": 7},
+                    {}
+                ]
+            },
+            "expecting_table": {
+                "meta": {"format": "table"},
+                "header": ["."],
+                "data": [
+                    [{"b": "x", "v": 2}],
+                    [{"b": "y", "v": 3}],
+                    [{"b": "x", "v": 5}],
+                    [{"b": "x", "v": 7}],
+                    [{}]
+                ]
+            },
+            "expecting_cube": {
+                "meta": {"format": "cube"},
+                "edges": [
+                    {
+                        "domain": {
+                            "interval": 1,
+                            "max": 5,
+                            "min": 0,
+                            "type": "rownum"
+                        },
+                        "name": "rownum"
+                    }
+                ],
+                "data": {
+                    ".": [
+                        {"b": "x", "v": 2},
+                        {"b": "y", "v": 3},
+                        {"b": "x", "v": 5},
+                        {"b": "x", "v": 7},
+                        {}
+                    ]
+
+                }
+            }
+        }
+        self.utils.execute_tests(test)
+
     def test_from_shallow_select_deep_column(self):
         test = {
             "data": [
@@ -1287,11 +1457,17 @@ class TestDeepOps(BaseTestCase):
                 }
             }
         }
-        self.utils.execute_es_tests(test)
+        self.utils.execute_tests(test)
 
 
-
-
+# TODO: using "find" as a filter should be legitimate:
+todo = {
+    "from": "task.task.artifacts",
+    "where": {"and": [
+        {"gt": {"action.start_time": {"date": "today-3day"}}},
+        {"find": {"name": "gcda"}}
+    ]}
+}
 
 # TODO: WHAT DOES * MEAN IN THE CONTEXT OF A DEEP QUERY?
 # THIS SHOULD RETURN SOMETHING, NOT FAIL
