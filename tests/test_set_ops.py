@@ -668,7 +668,7 @@ class TestSetOps(BaseTestCase):
 
         self.utils.fill_container(test)
         test.query.format = "list"
-        self.assertRaises(Exception, self.utils.execute_query, test.query)
+        self.assertRaises(Exception as self.utils.execute_query, test.query)
 
     def test_select_w_star(self):
         test = {

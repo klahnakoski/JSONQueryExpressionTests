@@ -258,7 +258,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception, self.utils.execute_tests, test)
+        self.assertRaises(Exception as self.utils.execute_tests, test)
 
     def test_empty_default_domain(self):
         test = {
@@ -338,7 +338,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception, self.utils.execute_tests, test)
+        self.assertRaises(Exception as self.utils.execute_tests, test)
 
     def test_groupby_is_table(self):
         test = {
@@ -453,10 +453,10 @@ class TestgroupBy1(BaseTestCase):
                 "header": ["g", "count"],
                 "data": [
                     [{"a": "b", "v": 1}, 2],
-                    [{"a": "b"}, 1],
+                    [{"a": "b"        }, 1],
                     [{"a": "c", "v": 2}, 2],
                     [{"a": "c", "v": 1}, 1],
-                    [{"v": 2}, 1]
+                    [{          "v": 2}, 1]
                 ]
             }
         }
@@ -481,10 +481,10 @@ class TestgroupBy1(BaseTestCase):
                 "meta": {"format": "list"},
                 "data": [
                     {"g.a": "b", "g.v": 1, "count": 2},
-                    {"g.a": "b", "count": 1},
+                    {"g.a": "b",           "count": 1},
                     {"g.a": "c", "g.v": 2, "count": 2},
                     {"g.a": "c", "g.v": 1, "count": 1},
-                    {"g.v": 2, "count": 1}
+                    {            "g.v": 2, "count": 1}
                 ]
             },
             "expecting_table": {

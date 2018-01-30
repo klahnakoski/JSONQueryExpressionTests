@@ -21,7 +21,7 @@ from jx_base.query import _normalize_select, _normalize_edges
 class TestQueryNormalization(FuzzyTestCase):
     def test_complex_edge_with_no_name(self):
         edge = {"value": ["a", "c"]}
-        self.assertRaises(Exception, _normalize_edges, edge)
+        self.assertRaises(Exception as _normalize_edges, edge)
 
     def test_complex_edge_value(self):
         edge = {"name": "n", "value": ["a", "c"]}
