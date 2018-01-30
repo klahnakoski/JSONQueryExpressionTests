@@ -258,7 +258,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception as self.utils.execute_tests, test)
+        self.assertRaises(Exception, self.utils.execute_tests, test)
 
     def test_empty_default_domain(self):
         test = {
@@ -338,7 +338,7 @@ class TestgroupBy1(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception as self.utils.execute_tests, test)
+        self.assertRaises(Exception, self.utils.execute_tests, test)
 
     def test_groupby_is_table(self):
         test = {

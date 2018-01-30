@@ -48,4 +48,4 @@ class TestTimeParser(FuzzyTestCase):
         self.assertAlmostEqual(parse("13week").seconds, (WEEK * 13).seconds)
 
     def test_bad_floor(self):
-        self.assertRaises(Exception as parse, "today - week|week")
+        self.assertRaises(Exception, parse, "today - week|week")

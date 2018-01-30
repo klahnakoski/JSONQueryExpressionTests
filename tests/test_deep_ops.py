@@ -125,7 +125,7 @@ class TestDeepOps(BaseTestCase):
                 "data": []
             }
         }
-        self.assertRaises(Exception as self.utils.execute_tests, test)
+        self.assertRaises(Exception, self.utils.execute_tests, test)
 
     def test_abs_shallow_select(self):
         # TEST THAT ABSOLUTE COLUMN NAMES WORK (WHEN THEY DO NOT CONFLICT WITH RELATIVE PROPERTY NAME)
