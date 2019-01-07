@@ -8,14 +8,18 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
+from mo_logs import Log
+
 from jx_base.expressions import NULL
+from jx_base.query import DEFAULT_LIMIT
 from mo_dots import wrap
 from mo_times.dates import Date
 from mo_times.durations import WEEK, DAY
-from tests.test_jx import BaseTestCase, TEST_TABLE, global_settings
+from tests.test_jx import BaseTestCase, TEST_TABLE
 
 TODAY = Date.today()
 
@@ -206,6 +210,43 @@ class TestTime(BaseTestCase):
         }
         self.utils.execute_tests(test)
 
+    def test_time_subtraction(self):
+        """
+        IF THIS FAILS, MAYBE THE JSON ROUNDING ENGINE IS ENABLED
+        """
+        today = Date("2018-10-20")
+        Log.note("Notice {{date}} is {{unix}} and rounding will affect that number", date=today, unix=today.unix)
+        data = [
+            {"a": today, "t": Date("2018-10-20").unix, "v": 2},
+            {"a": today, "t": Date("2018-10-19").unix, "v": 2},
+            {"a": today, "t": Date("2018-10-18").unix, "v": 3},
+            {"a": today, "t": Date("2018-10-17").unix, "v": 5},
+            {"a": today, "t": Date("2018-10-16").unix, "v": 7},
+            {"a": today, "t": Date("2018-10-15").unix, "v": 11},
+            {"a": today, "t": NULL, "v": 27},
+            {"a": today, "t": Date("2018-10-19").unix, "v": 13},
+            {"a": today, "t": Date("2018-10-18").unix, "v": 17},
+            {"a": today, "t": Date("2018-10-16").unix, "v": 19},
+            {"a": today, "t": Date("2018-10-15").unix, "v": 23}
+        ]
+
+        test = {
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": ["a", "t", "v", {"name": "diff", "value": {"sub": ["t", "a"]}}],
+                "limit": 100
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [
+                    {"a": Date(r.a).unix, "t": Date(r.t).unix, "v":r.v, "diff": (Date(r.t) - Date(r.a)).seconds}
+                    for r in wrap(data)
+                ]
+            }
+        }
+        self.utils.execute_tests(test)
+
     def test_time_expression(self):
         test = {
             "data": test_data_3,
@@ -245,7 +286,7 @@ class TestTime(BaseTestCase):
                             "type": "duration",
                             "key": "min",
                             "partitions": [
-                                {"min": e.since, "max": expected3[i + 1].since}
+                                {"min": e.since, "max": e.since + DAY.seconds}
                                 for i, e in enumerate(expected3[0:8:])
                             ]
                         }
@@ -302,3 +343,16 @@ class TestTime(BaseTestCase):
         }
         self.utils.execute_tests(test)
 
+    def test_literal_time(self):
+        test = {
+            "data": test_data_3,
+            "query": {
+                "from": TEST_TABLE,
+                "select": {"name": "date", "value": {"date": {"literal": "2018-01-01"}}}
+            },
+            "expecting_list": {
+                "meta": {"format": "list"},
+                "data": [1514764800] * DEFAULT_LIMIT
+            }
+        }
+        self.utils.execute_tests(test)

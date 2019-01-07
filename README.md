@@ -78,10 +78,12 @@ class BaseTestCase(FuzzyTestCase):
 ```
 
 
-## Exiting Projects 
+## Implementations
 
-* [jx-sqlite](https://github.com/klahnakoski/jx-sqlite/tree/master) Python implementation using Sqlite3
-* [ActiveData](https://github.com/klahnakoski/ActiveData) Python implementation for Elasticsearch versions 1.7, 5.x and 6.x
+Here are the projects that use this test suite. 
+
+* [jx-sqlite](https://github.com/mozilla/jx-sqlite) Python implementation using Sqlite3
+* [ActiveData](https://github.com/mozilla/ActiveData) Python implementation for Elasticsearch versions 1.7, 5.x and 6.x
 
 
 

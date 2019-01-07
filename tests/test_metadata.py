@@ -8,17 +8,40 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 
-from mo_dots import set_default, wrap
+from mo_logs.exceptions import extract_stack
 
+from mo_future import text_type
+
+from mo_dots import wrap
 from pyLibrary.meta import extenstion_method
 from tests.test_jx import BaseTestCase, TEST_TABLE
 
 
 class TestMetadata(BaseTestCase):
 
+    def test_meta_tables(self):
+        pre_test = {
+            "data": [{"a": "b"}],
+            "query": {"from": TEST_TABLE},  # DUMMY QUERY
+            "expecting_list": {
+                "meta": {"format": "list"}, "data": [{"a": "b"}]
+            }
+        }
+        self.utils.execute_tests(pre_test)
+
+        test = {
+            "query": {
+                "from": "meta.tables"
+            },
+            "expecting_list": {
+                "meta": {"format": "list"}
+            }
+        }
+        self.utils.send_queries(test)
 
     def test_meta(self):
         test = wrap({
@@ -28,9 +51,9 @@ class TestMetadata(BaseTestCase):
             ]
         })
 
-        settings = self.utils.fill_container(test, tjson=False)
+        settings = self.utils.fill_container(test, typed=False)
 
-        table_name = settings.index
+        table_name = settings.alias
 
         # WE REQUIRE A QUERY TO FORCE LOADING OF METADATA
         pre_test = {
@@ -97,7 +120,7 @@ class TestMetadata(BaseTestCase):
                 {"o": 4, "c": "x"}
             ]})
 
-        table_name = settings.index
+        table_name = settings.alias
 
         # WE REQUIRE A QUERY TO FORCE LOADING OF METADATA
         pre_test = {
@@ -160,3 +183,43 @@ class TestMetadata(BaseTestCase):
             return print_me, self.value
 
         self.assertEqual(a.my_func("testing"), ("testing", "test_value"), "Expecting method to be run")
+
+    def test_cardinality(self):
+        pre_test = {
+            "data": [{"a": "b"}, {"a": "c"}],
+            "query": {"from": TEST_TABLE},  # DUMMY QUERY
+            "expecting_list": {
+                "meta": {"format": "list"}, "data": [{"a": "b"}, {"a": "c"}]
+            }
+        }
+        self.utils.execute_tests(pre_test)
+
+        test = {
+            "query": {
+                "from": "meta.columns",
+                "select": "cardinality",
+                "where": {
+                    "and": [
+                        {
+                            "eq": {
+                                "table": TEST_TABLE
+                            }
+                        },
+                        {
+                            "eq": {
+                                "name": "a"
+                            }
+                        }
+                    ]
+                }
+            },
+            "expecting_list": {
+                "meta": {"format": "value"},
+                "data": [
+                    2
+                ]
+            }
+        }
+        subtest = wrap(pre_test)
+        subtest.name = text_type(extract_stack()[1]['method'])
+        self.utils.send_queries(subtest)
